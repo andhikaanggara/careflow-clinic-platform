@@ -65,7 +65,7 @@ export default function StaffClient({
 
   // states
   const [openDialog, setOpenDialog] = useState(false);
-  // 
+  //
   const [editing, setEditing] = useState<IStaff | null>(null);
 
   // form states
