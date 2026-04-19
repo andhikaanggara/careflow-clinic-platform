@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { Check, ChevronsUpDown, Command, Plus } from "lucide-react";
 
 // ui components
+import LogoutButton from "@/components/ui/logoutButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -199,13 +200,16 @@ export default function StaffClient({
             Kelola daftar petugas klinik.
           </p>
         </div>
-        <Button
-          type="button"
-          onClick={openAddDialog}
-          className="shrink-0 cursor-pointer"
-        >
-          Tambah petugas
-        </Button>
+        <div>
+          <Button
+            type="button"
+            onClick={openAddDialog}
+            className="shrink-0 cursor-pointer"
+          >
+            Tambah petugas
+          </Button>
+          <LogoutButton />
+        </div>
       </div>
 
       {/* table */}

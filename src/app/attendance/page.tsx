@@ -3,12 +3,22 @@ import type { IAttendanceRow } from "@/type/attendance";
 import type { IStaff } from "@/type/staff";
 
 import AttendanceClient from "@/app/attendance/attendance-client";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 /** Halaman ini selalu mengambil data terbaru dari Supabase, bukan cache build. */
 export const dynamic = "force-dynamic";
 
 // fetching data attendance dan staff secara bersamaan
 export default async function AttendancePage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) {
+    redirect("/login");
+  }
+
   const [attendanceRes, staffRes, roleRes] = await Promise.all([
     supabase
       .from("attendance")

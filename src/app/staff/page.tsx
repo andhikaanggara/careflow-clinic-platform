@@ -2,6 +2,8 @@ import supabase from "../../lib/db";
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
 import StaffClient from "./staff-client";
+import { createClient } from "@/utils/supabase/server";
+import { redirect } from "next/navigation";
 
 interface IErrorDisplay {
   title: string;
@@ -40,6 +42,15 @@ const ErrorDisplay = ({
 
 // fetching data staff
 export default async function StaffPage() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    redirect("/login");
+  }
+
   const [staffRes, roleRes] = await Promise.all([
     supabase
       .from("staff")
