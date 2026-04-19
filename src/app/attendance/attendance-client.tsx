@@ -65,7 +65,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import LogoutButton from "@/components/ui/logoutButton";
 
 // state
 const SHIFTS = ["Pagi", "Sore", "Malam"] as const;
@@ -260,19 +259,21 @@ export default function AttendanceClient({
   return (
     <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-6">
       {/* Bagian atas: judul kiri + tombol kanan */}
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <h1 className="text-xl font-semibold tracking-tight">
-          Presensi Petugas
-        </h1>
+      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
+        <div>
+          <h1 className="text-lg font-medium">Presensi Petugas</h1>
+          <p className="text-muted-foreground text-sm">
+            Kelola absensi petugas klinik.
+          </p>
+        </div>
         <div>
           <Button
             type="button"
-            className="cursor-pointer shrink-0"
+            className="shrink-0 cursor-pointer"
             onClick={() => setDialogOpen(true)}
           >
-            Tambah Presensi
+            Tambah presensi
           </Button>
-          <LogoutButton />
         </div>
       </div>
 

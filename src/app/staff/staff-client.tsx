@@ -6,7 +6,6 @@ import { toast } from "sonner";
 import { Check, ChevronsUpDown, Command, Plus } from "lucide-react";
 
 // ui components
-import LogoutButton from "@/components/ui/logoutButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -192,7 +191,7 @@ export default function StaffClient({
 
   /** Menampilkan komponen UI dengan tabel petugas dan dialog tambah/edit/hapus. */
   return (
-    <div className="mx-auto flex w-full max-w-4xl flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full flex-col gap-6 p-6">
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h1 className="text-lg font-medium">Manajemen petugas</h1>
@@ -208,7 +207,6 @@ export default function StaffClient({
           >
             Tambah petugas
           </Button>
-          <LogoutButton />
         </div>
       </div>
 
