@@ -1,100 +1,158 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { createClient } from "@/utils/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 
-import supabase from "@/lib/db";
-
-/** Bentuk balikan umum untuk aksi server: berhasil (`ok`) atau gagal dengan `error`. */
 export type StaffActionState = { error?: string; ok?: true };
 
-// fungsi tambah staff (ok)
+// helper for auth check and guest user detection
+async function getAuthContext(supabase: SupabaseClient) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) throw new Error("Unauthenticated");
+  return {
+    user,
+    isGuest: user.email === "guest@rahayumedika.com",
+  };
+}
+
+// function to add new staff
 export async function createStaff(
   formData: FormData,
 ): Promise<StaffActionState> {
   // ekstak data
-  const name = String(formData.get("name") ?? "").trim();
-  const role = String(formData.get("role") ?? "");
-  const isActiveRaw = String(formData.get("is_active") ?? "true");
-  const is_active = isActiveRaw !== "false";
+  try {
+    // variabel database
+    const supabase = await createClient();
+    const { isGuest } = await getAuthContext(supabase);
+    const data = {
+      full_name: String(formData.get("name") ?? "").trim(),
+      role: String(formData.get("role") ?? ""),
+      is_active: String(formData.get("is_active") ?? "true") !== "false",
+      is_demo: isGuest,
+    };
 
-  console.log(role);
+    // validasi data
+    if (!data.full_name) return { error: "Nama wajib diisi." };
+    if (!data.role) return { error: "Peran wajib dipilih." };
 
-  // validasi data
-  if (!name) return { error: "Nama wajib diisi." };
-  if (!role) return { error: "Peran wajib dipilih." };
+    // inset data
+    const { error: dbError } = await supabase.from("staff").insert(data);
 
-  // inset data
-  const { error } = await supabase
-    .from("staff")
-    .insert({ full_name: name, role, is_active });
+    // error handling
+    if (dbError) throw dbError;
 
-  // error handling
-  if (error) return { error: error.message };
-
-  // revalidasi cache
-  revalidatePath("/staff");
-  return { ok: true };
+    // revalidasi cache
+    revalidatePath("/staff");
+    return { ok: true };
+  } catch (err: any) {
+    console.error("Unexpected Error:", err);
+    return {
+      error: `Terjadi kesalahan tak terduga. Silakan coba lagi. ${err.message}`,
+    };
+  }
 }
 
-// Fungsi tambah role baru (ok)
+// function to add new role
 export async function createRole(
   formData: FormData,
 ): Promise<StaffActionState> {
   // ekstak data
-  const role = String(formData.get("role") ?? "").trim();
+  try {
+    const supabase = await createClient();
+    const { isGuest } = await getAuthContext(supabase);
+    const data = {
+      role: String(formData.get("role") ?? "").trim(),
+      is_demo: isGuest,
+    };
 
-  // validasi data
-  if (!role) return { error: "Peran wajib diisi." };
+    // validasi data
+    if (!data.role) return { error: "Peran wajib diisi." };
 
-  // inset data
-  const { error } = await supabase.from("roles").insert({ role });
+    // inset data
+    const { error: dbError } = await supabase.from("roles").insert(data);
 
-  // error handling
-  if (error) return { error: error.message };
+    // error handling
+    if (dbError) return { error: dbError.message };
 
-  // revalidasi cache
-  revalidatePath("/staff");
-  return { ok: true };
+    // revalidasi cache
+    revalidatePath("/staff");
+    return { ok: true };
+  } catch (err: any) {
+    return {
+      error: `Terjadi kesalahan tak terduga. Silakan coba lagi. ${err.message}`,
+    };
+  }
 }
 
-// fungsi update staff
+// function to update staff data
 export async function updateStaff(
   formData: FormData,
 ): Promise<StaffActionState> {
-  // ekstrak data dari form
-  const id = formData.get("id");
-  const name = String(formData.get("name") ?? "").trim();
-  const role = String(formData.get("role") ?? "");
-  const isActiveRaw = String(formData.get("is_active") ?? "true");
-  const is_active = isActiveRaw !== "false";
+  // ekstak database
+  try {
+    const supabase = await createClient();
+    const { isGuest } = await getAuthContext(supabase);
 
-  // validasi data
-  if (id === null || id === "") return { error: "ID petugas tidak valid." };
-  if (!name) return { error: "Nama wajib diisi." };
+    const id = formData.get("id");
+    const data = {
+      full_name: String(formData.get("name") ?? "").trim(),
+      role: String(formData.get("role") ?? ""),
+      is_active: formData.get("is_active") === "true",
+      is_demo: isGuest,
+    };
 
-  // update data di database
-  const { error } = await supabase
-    .from("staff")
-    .update({ full_name: name, role, is_active })
-    .eq("id", id);
+    // validasi data
+    if (id === null || id === "") return { error: "ID petugas tidak valid." };
+    if (!data.full_name) return { error: "Nama wajib diisi." };
+    if (!data.role) return { error: "Peran wajib dipilih." };
 
-  // error handling
-  if (error) return { error: error.message };
+    // update data di database
+    const { error: dbError } = await supabase
+      .from("staff")
+      .update(data)
+      .eq("id", id);
 
-  // revaldasi cache
-  revalidatePath("/staff");
-  return { ok: true };
+    // error handling
+    if (dbError) throw dbError;
+
+    // revaldasi cache
+    revalidatePath("/staff");
+    return { ok: true };
+  } catch (err: any) {
+    return {
+      error: `Terjadi kesalahan tak terduga. Silakan coba lagi. ${err.message}`,
+    };
+  }
 }
 
 // fungsi delete staff
 export async function deleteStaff(id: string): Promise<StaffActionState> {
-  // delete data di supabase
-  const { error } = await supabase.from("staff").delete().eq("id", id);
+  try {
+    const supabase = await createClient();
 
-  // error handling
-  if (error) return { error: error.message };
+    // auth check
+    await getAuthContext(supabase);
 
-  // revaldasi cache
-  revalidatePath("/staff");
-  return { ok: true };
+    // execution delete query
+    const { error: dbError } = await supabase
+      .from("staff")
+      .delete()
+      .eq("id", id);
+
+    // error handling
+    if (dbError) throw dbError;
+
+    // revaldasi cache
+    revalidatePath("/staff");
+    return { ok: true };
+  } catch (err: any) {
+    console.error("Unexpected Error:", err);
+    return {
+      error: `Terjadi kesalahan tak terduga. Silakan coba lagi. ${err.message}`,
+    };
+  }
 }

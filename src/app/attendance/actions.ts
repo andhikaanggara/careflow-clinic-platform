@@ -1,17 +1,27 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-
-import supabase from "@/lib/db";
+import { createClient } from "@/utils/supabase/server";
+import { SupabaseClient } from "@supabase/supabase-js";
 
 /** Balikan standar untuk aksi server: sukses atau pesan error. */
 export type AttendanceActionState = { error?: string; ok?: true };
 
 const SHIFTS = ["Pagi", "Sore", "Malam"] as const;
 
-/**
- * Memvalidasi string shift terhadap daftar yang diizinkan (sama dengan opsi di form).
- */
+async function getAuthContext(supabase: SupabaseClient) {
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+  if (error || !user) throw new Error("Unauthenticated");
+  return {
+    user,
+    isGuest: user.email === "guest@rahayumedika.com",
+  };
+}
+
+// fungsi validasi shift
 function isValidShift(shift: string): shift is (typeof SHIFTS)[number] {
   return (SHIFTS as readonly string[]).includes(shift);
 }
@@ -20,26 +30,33 @@ function isValidShift(shift: string): shift is (typeof SHIFTS)[number] {
 export async function createAttendance(
   formData: FormData,
 ): Promise<AttendanceActionState> {
-  const date = String(formData.get("date") ?? "").trim();
-  const shift = String(formData.get("shift") ?? "").trim();
-  const staffId = (formData.getAll("staff_id") ?? []) as string[];
+  const supabase = await createClient();
+  const { isGuest } = await getAuthContext(supabase);
+  const data = {
+    date: String(formData.get("date") ?? "").trim(),
+    shift: String(formData.get("shift") ?? "").trim(),
+    staffId: (formData.getAll("staff_id") ?? []) as string[],
+    is_demo: isGuest,
+  };
 
-  if (!date) {
+  if (!data.date) {
     return { error: "Tanggal wajib diisi." };
   }
-  if (!shift || !isValidShift(shift)) {
+  if (!data.shift || !isValidShift(data.shift)) {
     return { error: "Shift tidak valid." };
   }
 
-  const payload = staffId
+  const payload = data.staffId
     .filter((id) => id && id !== "null" && id !== "undefined")
-    .map((id) => ({ date, shift, staff_id: String(id) }));
+    .map((id) => ({
+      date: data.date,
+      shift: data.shift,
+      staff_id: String(id),
+    }));
 
   const { error } = await supabase.from("attendance").insert(payload);
 
-  if (error) {
-    return { error: error.message };
-  }
+  if (error) return { error: error.message };
 
   revalidatePath("/attendance");
   return { ok: true };
@@ -51,6 +68,11 @@ export async function updateAttendance(
   oldShift: string,
   formData: FormData,
 ): Promise<AttendanceActionState> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const isGuest = user?.email === "guest@rahayumedika.com";
   const newDate = String(formData.get("date") ?? "").trim();
   const newShift = String(formData.get("shift") ?? "").trim();
   const staffIds = (formData.getAll("staff_id") ?? []) as string[];
@@ -84,6 +106,7 @@ export async function delleteAttendance(
   date: string,
   shift: string,
 ): Promise<AttendanceActionState> {
+  const supabase = await createClient();
   const { error } = await supabase
     .from("attendance")
     .delete()

@@ -1,20 +1,27 @@
-import supabase from "@/lib/db";
-import type { IAttendanceRow } from "@/type/attendance";
-import type { IStaff } from "@/type/staff";
-
+// import component
 import AttendanceClient from "@/app/attendance/attendance-client";
+
+// import data fetching
 import { createClient } from "@/utils/supabase/server";
+
+// import library
 import { redirect } from "next/navigation";
 
-/** Halaman ini selalu mengambil data terbaru dari Supabase, bukan cache build. */
+// import type
+import type { IStaff } from "@/type/staff";
+import type { IAttendanceRow } from "@/type/attendance";
+import type { IRole } from "@/type/role";
+
+
 export const dynamic = "force-dynamic";
 
-// fetching data attendance dan staff secara bersamaan
+// fetching data attendance, staff, and role
 export default async function AttendancePage() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  
   if (!user) {
     redirect("/login");
   }
@@ -59,7 +66,7 @@ export default async function AttendancePage() {
    */
   const rows = (attendanceRes.data ?? []) as IAttendanceRow[];
   const staff = (staffRes.data ?? []) as IStaff[];
-  const roles = (roleRes.data ?? []) as { role: string }[];
+  const roles = (roleRes.data ?? []) as IRole[];
 
   /**
    * Menampilkan komponen klien dengan data presensi dan petugas yang sudah siap.

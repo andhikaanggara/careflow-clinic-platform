@@ -1,9 +1,16 @@
-import supabase from "../../lib/db";
+// import component
+import StaffClient from "./staff-client";
+
+// import data fetching
+import { createClient } from "@/utils/supabase/server";
+
+// import library
+import { redirect } from "next/navigation";
+
+// import type
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
-import StaffClient from "./staff-client";
-import { createClient } from "@/utils/supabase/server";
-import { redirect } from "next/navigation";
+
 
 interface IErrorDisplay {
   title: string;

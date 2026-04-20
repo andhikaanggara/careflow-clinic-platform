@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition, type FormEvent } from "react";
 import { toast } from "sonner";
-import { Check, ChevronsUpDown, Command, Plus } from "lucide-react";
+import { Edit3, Plus, Trash2, Users } from "lucide-react";
 
 // ui components
 import { Button } from "@/components/ui/button";
@@ -34,13 +34,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-
-// utils & types
-import { cn } from "@/lib/utils";
-import type { IStaff } from "@/type/staff";
-import type { IRole } from "@/type/role";
-import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
-import { set } from "date-fns";
 import {
   Combobox,
   ComboboxContent,
@@ -50,6 +43,13 @@ import {
   ComboboxList,
 } from "@/components/ui/combobox";
 
+// utils & types
+import type { IStaff } from "@/type/staff";
+import type { IRole } from "@/type/role";
+import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
+import { cn } from "@/lib/utils";
+import { set } from "date-fns";
+
 export default function StaffClient({
   initialStaff,
   initialRoles,
@@ -57,168 +57,148 @@ export default function StaffClient({
   initialStaff: IStaff[];
   initialRoles: IRole[];
 }) {
-  // variable
   const router = useRouter();
-
-  // hydration guard
   const [isMounted, setIsMounted] = useState(false);
 
-  // states
-  const [openDialog, setOpenDialog] = useState(false);
-  //
-  const [editing, setEditing] = useState<IStaff | null>(null);
+  // --- UI States ---
+  const [isDialogOpsOpen, setIsDialogOpsOpen] = useState(false);
+  const [isAllertDeleteOpen, setIsAlertDeleteOpen] = useState(false);
 
-  // form states
-  const [name, setName] = useState("");
-  const [role, setRole] = useState<string>("");
-  const [isActive, setIsActive] = useState(true);
-  const [formError, setFormError] = useState<string | null>(null);
-
-  // transition states
-  const [isPendingSave, startSaveTransition] = useTransition();
-  const [isPendingDelete, startDeleteTransition] = useTransition();
-  const [pendingDeleteId, setPendingDeleteId] = useState<string | null>(null);
-
-  // delete dialog states
-  const [deleteOpen, setDeleteOpen] = useState(false);
+  // --- Data states ---
+  const [editingStaff, setEditingStaff] = useState<IStaff | null>(null);
   const [deleteTarget, setDeleteTarget] = useState<IStaff | null>(null);
-  const [deleteError, setDeleteError] = useState<string | null>(null);
 
-  // sync mounting
-  useEffect(() => {
-    setIsMounted(true);
-    if (initialRoles.length > 0 && !role) setRole("");
-  }, [initialRoles, role]);
+  // --- Form states ---
+  const [formData, setFormData] = useState({
+    name: "",
+    role: "",
+    is_active: true,
+  });
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+
+  // --- Transitions ---
+  const [isPending, startTransition] = useTransition();
+
+  useEffect(() => () => setIsMounted(true), []);
   if (!isMounted) return null;
 
   // --- Handler ---
-
-  const openAddDialog = () => {
-    setEditing(null);
-    setName("");
-    setRole("");
-    setIsActive(true);
-    setFormError(null);
-    setOpenDialog(true);
+  const resetForm = () => {
+    setFormData({ name: "", role: "", is_active: true });
+    setEditingStaff(null);
+    setErrorMsg(null);
   };
 
-  /** Membuka dialog edit dan mengisi form dari baris yang dipilih. */
-  const openEditDialog = (row: IStaff) => {
-    setEditing(row);
-    setName(row.full_name);
-    setRole(row.role);
-    setIsActive(row.is_active);
-    setFormError(null);
-    setOpenDialog(true);
+  const handleOpenAdd = () => {
+    resetForm();
+    setIsDialogOpsOpen(true);
   };
 
-  // form handle submit untuk tambah/edit petugas
-  const handleFormSubmit = (e: FormEvent<HTMLFormElement>) => {
+  const handleOpenEdit = (staff: IStaff) => {
+    setEditingStaff(staff);
+    setFormData({
+      name: staff.full_name,
+      role: staff.role,
+      is_active: staff.is_active,
+    });
+    setIsDialogOpsOpen(true);
+  };
+
+  const onFormSubmit = async (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    setFormError(null);
-    const form = e.currentTarget;
-    const fd = new FormData(form);
+    setErrorMsg(null);
+    const fd = new FormData(e.currentTarget);
 
-    startSaveTransition(async () => {
-      const result = editing ? await updateStaff(fd) : await createStaff(fd);
-      toast.dismiss();
+    startTransition(async () => {
+      const result = editingStaff
+        ? await updateStaff(fd)
+        : await createStaff(fd);
+
       if (result.error) {
-        setFormError(result.error);
+        setErrorMsg(result.error);
         toast.error(
-          `Gagal ${editing ? "memperbarui" : "menambahkan"} petugas: ${result.error}`,
+          `Gagal ${editingStaff ? "memperbarui" : "menambahkan"} petugas: ${result.error}`,
         );
         return;
-      }
-      if (result.ok) {
-        setOpenDialog(false);
-        setEditing(null);
-        setName("");
-        setRole(initialRoles.length > 0 ? initialRoles[0].role : "");
-        setIsActive(true);
+      } else {
+        setIsDialogOpsOpen(false);
+        resetForm();
         router.refresh();
         toast.success(
-          `Petugas berhasil ${editing ? "diperbarui" : "ditambahkan"}`,
+          `Petugas berhasil ${editingStaff ? "diperbarui" : "ditambahkan"}`,
         );
       }
     });
   };
 
-  // funsi quick add role dari popover di form tambah/edit petugas
-  const handleQuickCreateRole = async () => {
-    if (!role) return;
-
+  const handleQuickAddRole = async () => {
+    if (!formData.role) return;
     const fd = new FormData();
-    fd.append("role", role);
+    fd.append("role", formData.role);
 
-    startSaveTransition(async () => {
+    startTransition(async () => {
       const result = await createRole(fd);
-      if (result.ok) {
-        setRole(role);
+      if (result.error) toast.error(`Gagal menambahkan peran: ${result.error}`);
+      else {
+        setFormData({ ...formData, role: formData.role });
         router.refresh();
-        toast.success(`Peran "${role}" berhasil ditambahkan`);
-      } else if (result.error) {
-        toast.error(`Gagal menambahkan peran: ${result.error}`);
+        toast.success(`Peran "${formData.role}" berhasil ditambahkan`);
       }
     });
   };
 
-  /** Menyiapkan baris yang akan dihapus dan membuka AlertDialog konfirmasi. */
-  const openDeleteDialog = (row: IStaff) => {
-    setDeleteTarget(row);
-    setDeleteError(null);
-    setDeleteOpen(true);
-  };
-
-  // Aller confirmation for delete staff
-  const confirmDelete = () => {
+  const onConfirmDelete = () => {
     if (!deleteTarget) return;
-    setDeleteError(null);
-    setPendingDeleteId(deleteTarget.id);
-    startDeleteTransition(async () => {
+
+    startTransition(async () => {
       const result = await deleteStaff(deleteTarget.id);
-      setPendingDeleteId(null);
       if (result.error) {
-        setDeleteError(result.error);
-        return;
+        toast.error(
+          `Gagal menghapus petugas: petugas memiliki absensi terkait, nonaktifkan petugas tersebut. Detail: ${result.error}`,
+        );
+      } else {
+        setIsAlertDeleteOpen(false);
+        setDeleteTarget(null);
+        router.refresh();
+        toast.success(`Petugas "${deleteTarget.full_name}" berhasil dihapus`);
       }
-      /** Menutup modal dan merefresh daftar petugas di UI. */
-      setDeleteOpen(false);
-      setDeleteTarget(null);
-      router.refresh();
-      toast.success(`Petugas "${deleteTarget.full_name}" berhasil dihapus`);
     });
   };
 
   /** Menampilkan komponen UI dengan tabel petugas dan dialog tambah/edit/hapus. */
   return (
     <div className="mx-auto flex w-full flex-col gap-6 p-6">
+      {/* Header Section */}
       <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h1 className="text-lg font-medium">Manajemen petugas</h1>
+          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
+            <Users className="h-6 w-6" />
+            Manajemen petugas
+          </h1>
           <p className="text-muted-foreground text-sm">
             Kelola daftar petugas klinik.
           </p>
         </div>
-        <div>
-          <Button
-            type="button"
-            onClick={openAddDialog}
-            className="shrink-0 cursor-pointer"
-          >
-            Tambah petugas
-          </Button>
-        </div>
+        <Button
+          type="button"
+          onClick={handleOpenAdd}
+          className="shrink-0 cursor-pointer"
+        >
+          Tambah petugas
+        </Button>
       </div>
 
-      {/* table */}
+      {/* Main table Section */}
       <div className="rounded-xl border border-border bg-background ring-1 ring-foreground/10">
         <Table>
-          <TableHeader>
+          <TableHeader className="bg-muted/50">
             <TableRow>
-              <TableHead>Nama</TableHead>
-              <TableHead>Peran</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead className="text-center w-35">Aksi</TableHead>
+              <TableHead className="font-semibold">Nama</TableHead>
+              <TableHead className="font-semibold">Peran</TableHead>
+              <TableHead className="font-semibold">Status</TableHead>
+              <TableHead className="text-center w-35 font-semibold">
+                Aksi
+              </TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -234,12 +214,14 @@ export default function StaffClient({
               </TableRow>
             ) : (
               /** Menampilkan tabel petugas dengan nama, peran, status, dan aksi. */
-              initialStaff.map((row) => (
-                <TableRow key={row.id}>
-                  <TableCell className="font-medium">{row.full_name}</TableCell>
-                  <TableCell>{row.role}</TableCell>
+              initialStaff.map((staff) => (
+                <TableRow key={staff.id}>
+                  <TableCell className="font-medium">
+                    {staff.full_name}
+                  </TableCell>
+                  <TableCell>{staff.role}</TableCell>
                   <TableCell className="text-muted-foreground text-sm">
-                    {row.is_active ? "Aktif" : "Nonaktif"}
+                    {staff.is_active ? "Aktif" : "Nonaktif"}
                   </TableCell>
                   <TableCell className="text-right">
                     <div className="flex justify-around gap-2">
@@ -248,8 +230,9 @@ export default function StaffClient({
                         variant="outline"
                         size="sm"
                         className="cursor-pointer"
-                        onClick={() => openEditDialog(row)}
+                        onClick={() => handleOpenEdit(staff)}
                       >
+                        <Edit3 className="mr-2 h-3 w-3 text-blue-600" />
                         Edit
                       </Button>
                       <Button
@@ -257,9 +240,13 @@ export default function StaffClient({
                         variant="destructive"
                         size="sm"
                         className="cursor-pointer"
-                        disabled={pendingDeleteId === row.id && isPendingDelete}
-                        onClick={() => openDeleteDialog(row)}
+                        disabled={isPending}
+                        onClick={() => {
+                          setDeleteTarget(staff);
+                          setIsAlertDeleteOpen(true);
+                        }}
                       >
+                        <Trash2 className="mr-2 h-3 w-3" />
                         Hapus
                       </Button>
                     </div>
@@ -273,12 +260,12 @@ export default function StaffClient({
 
       {/* add/edit Dialog */}
       <Dialog
-        open={openDialog}
+        open={isDialogOpsOpen}
         onOpenChange={(next) => {
-          setOpenDialog(next);
+          setIsDialogOpsOpen(next);
           if (!next) {
-            setEditing(null);
-            setFormError(null);
+            setEditingStaff(null);
+            setErrorMsg(null);
           }
         }}
         modal={true}
@@ -286,24 +273,24 @@ export default function StaffClient({
         <DialogContent className="sm:max-w-md" showCloseButton>
           <DialogHeader>
             <DialogTitle>
-              {editing ? "Edit petugas" : "Tambah petugas"}
+              {editingStaff ? "Edit petugas" : "Tambah petugas"}
             </DialogTitle>
             <DialogDescription>
-              {editing
+              {editingStaff
                 ? "Ubah nama, peran, atau status aktif petugas."
                 : "Isi nama dan pilih peran petugas baru."}
             </DialogDescription>
           </DialogHeader>
 
           {/* Form tambah/edit petugas dengan nama, peran, dan status aktif.  */}
-          <form onSubmit={handleFormSubmit} className="grid gap-4">
-            {editing ? (
-              <input type="hidden" name="id" value={editing.id} />
+          <form onSubmit={onFormSubmit} className="grid gap-4">
+            {editingStaff ? (
+              <input type="hidden" name="id" value={editingStaff.id} />
             ) : null}
             <input
               type="hidden"
               name="is_active"
-              value={isActive ? "true" : "false"}
+              value={formData.is_active ? "true" : "false"}
             />
 
             <div className="grid gap-2">
@@ -314,8 +301,10 @@ export default function StaffClient({
               <Input
                 id="staff-name"
                 name="name"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
                 placeholder="Nama lengkap"
                 required
                 autoComplete="name"
@@ -325,13 +314,15 @@ export default function StaffClient({
             {/* input field untuk peran petugas */}
             <div className="grid gap-2">
               <span className="text-sm font-medium">Peran</span>
-              <input type="hidden" name="role" value={role} />
+              <input type="hidden" name="role" value={formData.role} />
 
               <Combobox items={initialRoles} modal={false}>
                 <ComboboxInput
                   placeholder="Pilih atau ketik peran"
-                  value={role || ""}
-                  onChange={(e) => setRole(e.target.value)}
+                  value={formData.role || ""}
+                  onChange={(e) =>
+                    setFormData({ ...formData, role: formData.role })
+                  }
                 />
                 <ComboboxContent>
                   <ComboboxEmpty>
@@ -339,21 +330,22 @@ export default function StaffClient({
                       type="button"
                       variant="secondary"
                       className="w-full h-8 text-xs cursor-pointer"
-                      onClick={handleQuickCreateRole}
-                      disabled={isPendingSave || !role}
+                      onClick={handleQuickAddRole}
                     >
                       <Plus className="mr-2 h-3 w-3" />
-                      Tambah "{role}"
+                      Tambah "{formData.role}"
                     </Button>
                   </ComboboxEmpty>
                   <ComboboxList>
-                    {(value) => (
+                    {(item) => (
                       <ComboboxItem
-                        key={value.id}
-                        value={value.role}
-                        onClick={(e) => setRole(value.role)}
+                        key={item.id}
+                        value={item.role}
+                        onClick={(e) =>
+                          setFormData({ ...formData, role: item.role })
+                        }
                       >
-                        {value.role}
+                        {item.role}
                       </ComboboxItem>
                     )}
                   </ComboboxList>
@@ -365,17 +357,19 @@ export default function StaffClient({
             <label className="flex cursor-pointer items-center gap-2 text-sm">
               <input
                 type="checkbox"
-                checked={isActive}
-                onChange={(e) => setIsActive(e.target.checked)}
+                checked={formData.is_active}
+                onChange={(e) =>
+                  setFormData({ ...formData, is_active: e.target.checked })
+                }
                 className="size-4 rounded border-input"
               />
               Petugas aktif
             </label>
 
             {/* Menampilkan pesan error jika ada */}
-            {formError ? (
+            {errorMsg ? (
               <p className="text-destructive text-sm" role="alert">
-                {formError}
+                {errorMsg}
               </p>
             ) : null}
 
@@ -385,32 +379,27 @@ export default function StaffClient({
                 type="button"
                 variant="outline"
                 className="cursor-pointer"
-                onClick={() => setOpenDialog(false)}
+                onClick={() => setIsDialogOpsOpen(false)}
               >
                 Batal
               </Button>
               <Button
                 type="submit"
                 className="cursor-pointer"
-                disabled={isPendingSave}
+                disabled={isPending}
               >
-                {isPendingSave ? "Menyimpan…" : editing ? "Simpan" : "Tambah"}
+                {isPending ? "Menyimpan…" : editingStaff ? "Simpan" : "Tambah"}
               </Button>
             </DialogFooter>
           </form>
         </DialogContent>
       </Dialog>
 
-      {/* Dialog konfirmasi hapus */}
+      {/* Delete Alert */}
       <AlertDialog
-        open={deleteOpen}
+        open={isAllertDeleteOpen}
         onOpenChange={(next) => {
-          setDeleteOpen(next);
-          /* Reset target hapus dan error ketika modal ditutup tanpa menghapus */
-          if (!next) {
-            setDeleteTarget(null);
-            setDeleteError(null);
-          }
+          setIsAlertDeleteOpen;
         }}
       >
         <AlertDialogContent>
@@ -425,12 +414,6 @@ export default function StaffClient({
             </AlertDialogDescription>
           </AlertDialogHeader>
 
-          {deleteError ? (
-            <p className="text-destructive text-sm" role="alert">
-              {deleteError}
-            </p>
-          ) : null}
-
           <AlertDialogFooter>
             <AlertDialogCancel className="cursor-pointer">
               Batal
@@ -438,10 +421,10 @@ export default function StaffClient({
             <AlertDialogAction
               className="cursor-pointer"
               variant="destructive"
-              onClick={confirmDelete}
-              disabled={isPendingDelete}
+              onClick={onConfirmDelete}
+              disabled={isPending}
             >
-              {isPendingDelete ? "Menghapus…" : "Hapus"}
+              {isPending ? "Menghapus…" : "Hapus"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -46,6 +46,21 @@ export default function LoginClient() {
     }
   };
 
+  const handleGuestLogin = async () => {
+    setLoading(true);
+    const { error } = await supabase.auth.signInWithPassword({
+      email: "guest@rahayumedika.com",
+      password: "password123",
+    });
+    if (error) {
+      alert(error.message);
+      setLoading(false);
+    } else {
+      router.push("/staff");
+      router.refresh();
+    }
+  };
+
   //   render
   return (
     <Card className="w-full max-w-sm">
@@ -73,10 +88,29 @@ export default function LoginClient() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-          <Button type="submit" className="w-full" disabled={loading}>
+          <Button type="submit" className="cursor-pointer w-full" disabled={loading}>
             {loading ? "Authenticating..." : "Login"}
           </Button>
         </form>
+
+        <div className="relative my-4">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">Or</span>
+          </div>
+        </div>
+
+        <Button
+          type="button"
+          variant="outline"
+          className="w-full cursor-pointer hover:bg-secondary"
+          onClick={handleGuestLogin}
+          disabled={loading}
+        >
+          {loading ? "Connecting..." : "Login as Guest"}
+        </Button>
       </CardContent>
     </Card>
   );
