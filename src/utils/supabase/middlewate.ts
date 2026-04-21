@@ -21,6 +21,30 @@ export async function updateSession(request: NextRequest) {
     },
   );
 
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session) {
+    const loginTime = new Date(session.user.last_sign_in_at!).getTime();
+    const currentTime = new Date().getTime();
+    const LIMIT_9_HOURS = 9 * 60 * 60 * 1000;
+
+    if (currentTime - loginTime > LIMIT_9_HOURS) {
+      const isMutating = ["POST", "PUT", "PATCH", "DELETE"].includes(
+        request.method,
+      );
+
+      if (!isMutating) {
+        await supabase.auth.signOut();
+        const url = request.nextUrl.clone();
+        url.pathname = "/login";
+        url.searchParams.set("error", "session_expired");
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+
   await supabase.auth.getUser();
   return supabaseResponse;
 }

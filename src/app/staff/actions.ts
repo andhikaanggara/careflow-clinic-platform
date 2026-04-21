@@ -43,7 +43,7 @@ export async function createStaff(
     const { error: dbError } = await supabase.from("staff").insert(data);
 
     // error handling
-    if (dbError) throw dbError;
+    if (dbError) return { error: dbError.message };
 
     // revalidasi cache
     revalidatePath("/staff");
@@ -117,7 +117,7 @@ export async function updateStaff(
       .eq("id", id);
 
     // error handling
-    if (dbError) throw dbError;
+    if (dbError) return { error: dbError.message };
 
     // revaldasi cache
     revalidatePath("/staff");
@@ -131,12 +131,10 @@ export async function updateStaff(
 
 // fungsi delete staff
 export async function deleteStaff(id: string): Promise<StaffActionState> {
+  const supabase = await createClient();
+  await getAuthContext(supabase);
+  
   try {
-    const supabase = await createClient();
-
-    // auth check
-    await getAuthContext(supabase);
-
     // execution delete query
     const { error: dbError } = await supabase
       .from("staff")
@@ -144,7 +142,7 @@ export async function deleteStaff(id: string): Promise<StaffActionState> {
       .eq("id", id);
 
     // error handling
-    if (dbError) throw dbError;
+    if (dbError) return { error: dbError.message };
 
     // revaldasi cache
     revalidatePath("/staff");

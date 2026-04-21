@@ -1,16 +1,13 @@
-// import component
-import StaffClient from "./staff-client";
-
-// import data fetching
 import { createClient } from "@/utils/supabase/server";
-
-// import library
 import { redirect } from "next/navigation";
 
-// import type
+// component
+import StaffClient from "./staff-client";
+import { DataErrorState } from "@/components/data-error-state";
+
+// type
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
-
 
 interface IErrorDisplay {
   title: string;
@@ -21,39 +18,13 @@ interface IErrorDisplay {
 
 export const dynamic = "force-dynamic";
 
-const ErrorDisplay = ({
-  title,
-  message,
-  tableName,
-  columns,
-}: IErrorDisplay) => (
-  <div className="mx-auto max-w-4xl p-6">
-    <h1 className="text-lg font-medium">{title}</h1>
-    <p className="text-destructive mt-2 text-sm">
-      Gagal memuat data : {message}
-    </p>
-    <p className="text-muted-foreground mt-2 text-sm">
-      Pastikan tabel{" "}
-      <code className="rounded bg-muted px-1"> {tableName} </code> ada dengan
-      kolom{" "}
-      {columns.map((col, i) => (
-        <span key={col}>
-          <code className="rounded bg-muted px-1">{col}</code>
-          {i < columns.length - 1 ? ", " : ""}
-        </span>
-      ))}{" "}
-      dan serta RLS yang sesuai.
-    </p>
-  </div>
-);
-
 // fetching data staff
 export default async function StaffPage() {
   const supabase = await createClient();
+
   const {
     data: { user },
   } = await supabase.auth.getUser();
-
   if (!user) {
     redirect("/login");
   }
@@ -70,7 +41,7 @@ export default async function StaffPage() {
   // return message error
   if (staffRes.error) {
     return (
-      <ErrorDisplay
+      <DataErrorState
         title="Manajement Petugas"
         message={staffRes.error.message}
         tableName="staff"
@@ -81,7 +52,7 @@ export default async function StaffPage() {
 
   if (roleRes.error) {
     return (
-      <ErrorDisplay
+      <DataErrorState
         title="Manajement Peran"
         message={roleRes.error.message}
         tableName="roles"

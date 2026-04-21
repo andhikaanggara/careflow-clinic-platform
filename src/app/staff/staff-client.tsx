@@ -49,6 +49,7 @@ import type { IRole } from "@/type/role";
 import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
 import { cn } from "@/lib/utils";
 import { set } from "date-fns";
+import { SectionHeader } from "@/components/section-header";
 
 export default function StaffClient({
   initialStaff,
@@ -79,7 +80,9 @@ export default function StaffClient({
   // --- Transitions ---
   const [isPending, startTransition] = useTransition();
 
-  useEffect(() => () => setIsMounted(true), []);
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
   if (!isMounted) return null;
 
   // --- Handler ---
@@ -115,6 +118,16 @@ export default function StaffClient({
         : await createStaff(fd);
 
       if (result.error) {
+        const isAuthError =
+          result.error.toLowerCase().includes("expired") ||
+          result.error.toLowerCase().includes("claims");
+
+        if (isAuthError) {
+          toast.error("Sesi Anda telah habis, silakan login kembali.");
+          window.location.href = "/login?error=session_expired";
+          return;
+        }
+
         setErrorMsg(result.error);
         toast.error(
           `Gagal ${editingStaff ? "memperbarui" : "menambahkan"} petugas: ${result.error}`,
@@ -150,11 +163,15 @@ export default function StaffClient({
   const onConfirmDelete = () => {
     if (!deleteTarget) return;
 
+    setIsAlertDeleteOpen(false);
+
     startTransition(async () => {
       const result = await deleteStaff(deleteTarget.id);
+
       if (result.error) {
         toast.error(
-          `Gagal menghapus petugas: petugas memiliki absensi terkait, nonaktifkan petugas tersebut. Detail: ${result.error}`,
+          "Gagal menghapus petugas: petugas memiliki absensi terkait, kamu hanya bisa menonaktifkan petugas tersebut.",
+          { duration: 8000 },
         );
       } else {
         setIsAlertDeleteOpen(false);
@@ -169,24 +186,13 @@ export default function StaffClient({
   return (
     <div className="mx-auto flex w-full flex-col gap-6 p-6">
       {/* Header Section */}
-      <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <h1 className="text-2xl font-semibold tracking-tight flex items-center gap-2">
-            <Users className="h-6 w-6" />
-            Manajemen petugas
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Kelola daftar petugas klinik.
-          </p>
-        </div>
-        <Button
-          type="button"
-          onClick={handleOpenAdd}
-          className="shrink-0 cursor-pointer"
-        >
-          Tambah petugas
-        </Button>
-      </div>
+      <SectionHeader
+        title="Manajemen Petugas"
+        description="Kelola daftar petugas klinik."
+        icon={Users}
+        actionLabel="Tambah petugas"
+        onAction={handleOpenAdd}
+      />
 
       {/* Main table Section */}
       <div className="rounded-xl border border-border bg-background ring-1 ring-foreground/10">
@@ -321,10 +327,10 @@ export default function StaffClient({
                   placeholder="Pilih atau ketik peran"
                   value={formData.role || ""}
                   onChange={(e) =>
-                    setFormData({ ...formData, role: formData.role })
+                    setFormData({ ...formData, role: e.target.value })
                   }
                 />
-                <ComboboxContent>
+                <ComboboxContent className="pointer-events-auto">
                   <ComboboxEmpty>
                     <Button
                       type="button"
@@ -336,7 +342,7 @@ export default function StaffClient({
                       Tambah "{formData.role}"
                     </Button>
                   </ComboboxEmpty>
-                  <ComboboxList>
+                  <ComboboxList className="max-h-43 overflow-y-auto border rounded-md shadow-sm bg-popover">
                     {(item) => (
                       <ComboboxItem
                         key={item.id}
@@ -398,9 +404,7 @@ export default function StaffClient({
       {/* Delete Alert */}
       <AlertDialog
         open={isAllertDeleteOpen}
-        onOpenChange={(next) => {
-          setIsAlertDeleteOpen;
-        }}
+        onOpenChange={setIsAlertDeleteOpen}
       >
         <AlertDialogContent>
           <AlertDialogHeader>
