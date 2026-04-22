@@ -9,7 +9,7 @@ export default async function LoginPage() {
   } = await supabase.auth.getUser();
 
   if (user) {
-    redirect("/staff"); //harusnya halaman dashboart atau halaman utama setelah login
+    redirect("/attendance"); //harusnya halaman dashboart atau halaman utama setelah login
   }
 
   return (
