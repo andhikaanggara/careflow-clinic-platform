@@ -9,13 +9,6 @@ import { DataErrorState } from "@/components/data-error-state";
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
 
-interface IErrorDisplay {
-  title: string;
-  message: string;
-  tableName: string;
-  columns: string[];
-}
-
 export const dynamic = "force-dynamic";
 
 // fetching data staff

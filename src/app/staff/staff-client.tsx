@@ -47,9 +47,8 @@ import {
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
 import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
-import { cn } from "@/lib/utils";
-import { set } from "date-fns";
 import { SectionHeader } from "@/components/section-header";
+import { StaffTableShell } from "./_components/staff-table-shell";
 
 export default function StaffClient({
   initialStaff,
@@ -184,7 +183,7 @@ export default function StaffClient({
 
   /** Menampilkan komponen UI dengan tabel petugas dan dialog tambah/edit/hapus. */
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-10 h-[calc(100vh-64px)] overflow-hidden">
       {/* Header Section */}
       <SectionHeader
         title="Manajemen Petugas"
@@ -195,19 +194,55 @@ export default function StaffClient({
       />
 
       {/* Main table Section */}
-      <div className="rounded-xl border border-border bg-background ring-1 ring-foreground/10">
-        <Table>
-          <TableHeader className="bg-muted/50">
-            <TableRow>
-              <TableHead className="font-semibold">Nama</TableHead>
-              <TableHead className="font-semibold">Peran</TableHead>
-              <TableHead className="font-semibold">Status</TableHead>
-              <TableHead className="text-center w-35 font-semibold">
-                Aksi
-              </TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
+      <div className="flex-1 min-h-0">
+        {/* Mobile View: Tampil Card */}
+        <div className="grid grid-cols-1 gap-4 md:hidden overflow-auto max-h-full relative">
+          {initialStaff.map((staff) => (
+            <div key={staff.id} className="p-4 border rounded-lg shadow-sm">
+              <div className="font-bold">{staff.full_name}</div>
+              <div className="text-sm text-muted-foreground flex gap-2">
+                {staff.role}
+                <div
+                  className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                    staff.is_active
+                      ? "bg-green-100 text-green-700 border border-green-200"
+                      : "bg-red-100 text-red-700 border border-red-200"
+                  }`}
+                >
+                  {staff.is_active ? "Aktif" : "Nonaktif"}
+                </div>
+              </div>
+              <div className="mt-4 flex gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  className="cursor-pointer"
+                  onClick={() => handleOpenEdit(staff)}
+                >
+                  Edit
+                </Button>
+                <Button
+                  type="button"
+                  variant="destructive"
+                  size="sm"
+                  className="cursor-pointer"
+                  disabled={isPending}
+                  onClick={() => {
+                    setDeleteTarget(staff);
+                    setIsAlertDeleteOpen(true);
+                  }}
+                >
+                  Hapus
+                </Button>
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Desktop View: Tampil Table */}
+        <div className="hidden md:block">
+          <StaffTableShell>
             {/* Menampilkan pesan jika belum ada petugas. */}
             {initialStaff.length === 0 ? (
               <TableRow>
@@ -230,7 +265,7 @@ export default function StaffClient({
                     {staff.is_active ? "Aktif" : "Nonaktif"}
                   </TableCell>
                   <TableCell className="text-right">
-                    <div className="flex justify-around gap-2">
+                    <div className="flex justify-center gap-2">
                       <Button
                         type="button"
                         variant="outline"
@@ -238,8 +273,7 @@ export default function StaffClient({
                         className="cursor-pointer"
                         onClick={() => handleOpenEdit(staff)}
                       >
-                        <Edit3 className="mr-2 h-3 w-3 text-blue-600" />
-                        Edit
+                        <Edit3 className="h-3 w-3 text-blue-600" />
                       </Button>
                       <Button
                         type="button"
@@ -252,16 +286,15 @@ export default function StaffClient({
                           setIsAlertDeleteOpen(true);
                         }}
                       >
-                        <Trash2 className="mr-2 h-3 w-3" />
-                        Hapus
+                        <Trash2 className="h-3 w-3" />
                       </Button>
                     </div>
                   </TableCell>
                 </TableRow>
               ))
             )}
-          </TableBody>
-        </Table>
+          </StaffTableShell>
+        </div>
       </div>
 
       {/* add/edit Dialog */}

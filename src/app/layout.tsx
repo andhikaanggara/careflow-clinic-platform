@@ -7,7 +7,6 @@ import { cn } from "@/lib/utils";
 import { createClient } from "@/utils/supabase/server";
 
 // Providers & Global Components
-import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { LayoutWrapper } from "@/components/layout-wrapper";
 import { SessionWatcher } from "@/components/session-watcher";
@@ -64,7 +63,6 @@ export default async function RootLayout({
           <TooltipProvider delayDuration={400}>
             <LayoutWrapper>{children}</LayoutWrapper>
           </TooltipProvider>
-          <Toaster position="top-right" richColors closeButton />
         </ThemeProvider>
       </body>
     </html>

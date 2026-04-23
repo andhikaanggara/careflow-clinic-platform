@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
+import { useSidebar } from "@/components/ui/sidebar";
 
 import {
   Sidebar,
@@ -29,11 +30,11 @@ import { createClient } from "@/utils/supabase/client";
 
 // Menu items.
 const items = [
-  {
-    title: "Dashboard",
-    url: "", //"/dashboard"
-    icon: Home,
-  },
+  // {
+  //   title: "Dashboard",
+  //   url: "", //"/dashboard"
+  //   icon: Home,
+  // },
   {
     title: "Staff Management",
     url: "/staff",
@@ -44,20 +45,30 @@ const items = [
     url: "/attendance",
     icon: Calendar,
   },
-  {
-    title: "Settings",
-    url: "", //"/settings"
-    icon: Settings,
-  },
+  // {
+  //   title: "Settings",
+  //   url: "", //"/settings"
+  //   icon: Settings,
+  // },
 ];
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { setOpenMobile, isMobile } = useSidebar();
   const supabase = createClient();
   const router = useRouter();
   const pathname = usePathname();
 
+  const handleNavClick = () => {
+    if (isMobile) {
+      setOpenMobile(false);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
+    if (isMobile) {
+      setOpenMobile(false);
+    }
     router.push("/login");
     router.refresh();
   };
@@ -68,7 +79,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/attendance">
+              <Link href="">
                 {/* harusnya ini link ke dashboard atau halaman utama setelah login */}
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
                   <HeartPulse className="size-4" />
@@ -97,6 +108,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                     asChild
                     tooltip={item.title}
                     isActive={pathname === item.url}
+                    onClick={handleNavClick}
                   >
                     <Link href={item.url}>
                       <item.icon />

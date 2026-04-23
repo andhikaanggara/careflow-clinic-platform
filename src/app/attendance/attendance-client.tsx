@@ -1,8 +1,8 @@
 "use client";
 
 // import library
-import { format, set } from "date-fns";
 import { useRouter } from "next/navigation";
+import { format } from "date-fns";
 import {
   useEffect,
   useMemo,
@@ -50,11 +50,6 @@ import {
   ComboboxItem,
   ComboboxList,
 } from "@/components/ui/combobox";
-
-// import type
-import type { IAttendanceRow } from "@/type/attendance";
-import type { IStaff } from "@/type/staff";
-import type { IRole } from "@/type/role";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -65,6 +60,11 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+
+// import type
+import type { IRole } from "@/type/role";
+import type { IStaff } from "@/type/staff";
+import type { IAttendanceRow } from "@/type/attendance";
 
 // state
 const SHIFTS = ["Pagi", "Sore", "Malam"] as const;
