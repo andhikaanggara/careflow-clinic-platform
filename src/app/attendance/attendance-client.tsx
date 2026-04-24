@@ -2,6 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { format } from "date-fns";
+import { id } from "date-fns/locale";
 import {
   useEffect,
   useMemo,
@@ -127,6 +128,14 @@ export default function AttendanceClient({
     return staffMap.get(id)?.full_name ?? "Petugas";
   };
 
+  const formatDateIndo = (dateStr: string) => {
+    try {
+      return format(new Date(dateStr), "dd MMMM yyyy", { locale: id });
+    } catch {
+      return dateStr;
+    }
+  };
+
   // --- Handlers ---
   const resetForm = () => {
     setEditing(null);
@@ -218,7 +227,7 @@ export default function AttendanceClient({
               className="p-4 border border-border bg-background rounded-xl shadow-sm space-y-3"
             >
               <div className="flex justify-between items-center border-b pb-2">
-                <div className="font-bold">{row.date}</div>
+                <div className="font-bold">{formatDateIndo(row.date)}</div>
                 <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">
                   {row.shift}
                 </div>
@@ -274,7 +283,7 @@ export default function AttendanceClient({
               groupedAttendance.map((row) => (
                 <TableRow key={row.id}>
                   <TableCell className="font-medium whitespace-nowrap">
-                    {row.date}
+                    {formatDateIndo(row.date)}
                   </TableCell>
                   <TableCell>{row.shift}</TableCell>
                   {roles.map(({ role }) => (
@@ -426,8 +435,8 @@ export default function AttendanceClient({
           <AlertDialogHeader>
             <AlertDialogTitle>Hapus Presensi?</AlertDialogTitle>
             <AlertDialogDescription>
-              Data {deleteTarget?.date} shift {deleteTarget?.shift} akan
-              dihapus.
+              Data {deleteTarget?.date && formatDateIndo(deleteTarget.date)}{" "}
+              shift {deleteTarget?.shift} akan dihapus.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
