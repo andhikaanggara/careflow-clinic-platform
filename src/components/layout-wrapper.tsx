@@ -22,7 +22,7 @@ export function LayoutWrapper({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar />
-      <main className="w-full">
+      <main className="flex-col flex-1 w-screen overflow-hidden ">
         <header>
           <div className="border-b-2 sticky top-0 z-10 bg-background p-3 ">
             <div className="flex items-center gap-2">

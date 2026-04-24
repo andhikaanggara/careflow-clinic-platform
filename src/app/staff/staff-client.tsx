@@ -8,6 +8,8 @@ import { Edit3, Plus, Trash2, Users } from "lucide-react";
 // ui components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SectionHeader } from "@/components/section-header";
+import { StaffTableShell } from "./_components/staff-table-shell";
 import {
   Dialog,
   DialogContent,
@@ -47,8 +49,6 @@ import {
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
 import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
-import { SectionHeader } from "@/components/section-header";
-import { StaffTableShell } from "./_components/staff-table-shell";
 
 export default function StaffClient({
   initialStaff,
@@ -241,7 +241,7 @@ export default function StaffClient({
         </div>
 
         {/* Desktop View: Tampil Table */}
-        <div className="hidden md:block">
+        <div className="hidden md:block overflow-auto h-full relative">
           <StaffTableShell>
             {/* Menampilkan pesan jika belum ada petugas. */}
             {initialStaff.length === 0 ? (

@@ -37,23 +37,36 @@ export default async function AttendancePage() {
   ]);
 
   // return message error
+  if (roleRes.error) {
+    return (
+      <DataErrorState
+        title="Manajement Peran"
+        message={roleRes.error.message}
+        tableName="roles"
+        columns={["role"]}
+      />
+    );
+  }
+
   if (staffRes.error) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
-        <p className="text-destructive text-sm">
-          Gagal memuat petugas: {staffRes.error.message}
-        </p>
-      </div>
+      <DataErrorState
+        title="Manajement Petugas"
+        message={staffRes.error.message}
+        tableName="staff"
+        columns={["id", "full_name", "role", "is_active"]}
+      />
     );
   }
 
   if (attendanceRes.error) {
     return (
-      <div className="mx-auto max-w-6xl p-6">
-        <p className="text-destructive text-sm">
-          Gagal memuat presensi: {attendanceRes.error.message}
-        </p>
-      </div>
+      <DataErrorState
+        title="Manajement Absensi"
+        message={attendanceRes.error.message}
+        tableName="attendance"
+        columns={["id", "date", "shift", "staff_id"]}
+      />
     );
   }
 

@@ -4,11 +4,11 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/utils/supabase/server";
 import { SupabaseClient } from "@supabase/supabase-js";
 
-/** Balikan standar untuk aksi server: sukses atau pesan error. */
 export type AttendanceActionState = { error?: string; ok?: true };
 
 const SHIFTS = ["Pagi", "Sore", "Malam"] as const;
 
+// helper for auth check and guest user detection
 async function getAuthContext(supabase: SupabaseClient) {
   const {
     data: { user },
@@ -52,6 +52,7 @@ export async function createAttendance(
       date: data.date,
       shift: data.shift,
       staff_id: String(id),
+      is_demo: data.is_demo,
     }));
 
   const { error } = await supabase.from("attendance").insert(payload);
@@ -90,7 +91,12 @@ export async function updateAttendance(
 
   const payload = staffIds
     .filter((id) => id && id !== "null" && id !== "undefined")
-    .map((id) => ({ date: newDate, shift: newShift, staff_id: id }));
+    .map((id) => ({
+      date: newDate,
+      shift: newShift,
+      staff_id: id,
+      is_demo: isGuest,
+    }));
 
   const { error: insertError } = await supabase
     .from("attendance")

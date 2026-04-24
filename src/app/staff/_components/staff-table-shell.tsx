@@ -8,7 +8,7 @@ import {
 
 export function StaffTableShell({ children }: { children: React.ReactNode }) {
   return (
-    <div className="rounded-xl border border-border bg-background shadow-sm overflow-auto max-h-full relative">
+    <div className="rounded-xl border border-border bg-background shadow-sm overflow-auto h-full relative">
       <Table>
         <TableHeader className="bg-muted/50 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
           <TableRow>

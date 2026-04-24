@@ -6,7 +6,7 @@ import { Users } from "lucide-react";
 
 export default function StaffLoading() {
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 p-6">
+    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-10 h-[calc(100vh-64px)] overflow-hidden">
       {/* Header Section */}
       <SectionHeader
         title="Manajemen Petugas"
@@ -16,9 +16,9 @@ export default function StaffLoading() {
       />
 
       {/* Main table Section */}
-      <div className="rounded-xl border border-border bg-background ring-1 ring-foreground/10">
+      <div className="rounded-xl border border-border bg-background ring-1 ring-foreground/10 hidden md:block h-full">
         <StaffTableShell>
-          {Array.from({ length: 5 }).map((_, i) => (
+          {Array.from({ length: 2 }).map((_, i) => (
             <TableRow key={i}>
               <TableCell>
                 <Skeleton className="h-5 w-full" />
