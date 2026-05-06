@@ -59,9 +59,9 @@ export default async function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <SessionWatcher lastSignInAt={user?.email_change_sent_at} />
           <TooltipProvider delayDuration={400}>
             <LayoutWrapper>{children}</LayoutWrapper>
+            <SessionWatcher lastSignInAt={user?.email_change_sent_at} />
           </TooltipProvider>
         </ThemeProvider>
       </body>

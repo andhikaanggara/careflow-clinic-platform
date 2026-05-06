@@ -352,7 +352,7 @@ export default function StaffClient({
 
             {/* input field untuk peran petugas */}
             <div className="grid gap-2">
-              <span className="text-sm font-medium">Peran</span>
+              <label className="text-sm font-medium">Peran</label>
               <input type="hidden" name="role" value={formData.role} />
 
               <Combobox items={initialRoles} modal={false}>
@@ -380,7 +380,7 @@ export default function StaffClient({
                       <ComboboxItem
                         key={item.id}
                         value={item.role}
-                        onClick={(e) =>
+                        onClick={() =>
                           setFormData({ ...formData, role: item.role })
                         }
                       >

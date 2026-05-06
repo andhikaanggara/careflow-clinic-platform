@@ -8,6 +8,7 @@ import {
   Settings,
   LogOut,
   HeartPulse,
+  Clipboard,
 } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import Link from "next/link";
@@ -35,6 +36,8 @@ const items = [
   //   url: "", //"/dashboard"
   //   icon: Home,
   // },
+  { title: "Patient Visits", url: "/patient-visits", icon: Clipboard },
+
   {
     title: "Staff Management",
     url: "/staff",
