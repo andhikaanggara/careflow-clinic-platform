@@ -1,14 +1,13 @@
 "use client";
 
-import { useState } from "react";
 import { ClipboardList, Plus, Search, Trash2, UserPlus } from "lucide-react";
 import { SectionHeader } from "@/components/section-header";
-import { VisitsFormDialog } from "./_componenets/visits-from-dialog";
 
-export default function VisitClient({ patientList, staffList, treatments }: any) {
-  const [isOpen, setIsOpen] = useState(false);
-
-
+export default function VisitClientLoading({
+  patientList,
+  staffList,
+  treatments,
+}: any) {
   return (
     <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-10">
       <SectionHeader
@@ -16,22 +15,11 @@ export default function VisitClient({ patientList, staffList, treatments }: any)
         description="Data kunjungan dan transaksi hari ini."
         icon={ClipboardList}
         actionLabel="Registrasi Pasien"
-        onAction={() => setIsOpen(true)}
       />
-
-
       {/* Tabel Kunjungan (Gunakan shell yang sama dengan Attendance) */}
       <div className="border rounded-xl overflow-hidden bg-background">
         {/* Render Map initialVisits di sini seperti di AttendanceClient */}
       </div>
-
-      <VisitsFormDialog
-        patientList={patientList}
-        staffList={staffList}
-        treatmentsList={treatments}
-        isOpen={isOpen}
-        setIsOpen={setIsOpen}
-      />
     </div>
   );
 }

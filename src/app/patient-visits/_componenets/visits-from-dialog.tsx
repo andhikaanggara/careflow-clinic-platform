@@ -42,8 +42,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, UserPlus } from "lucide-react";
 
 // Action
-import { createPatient } from "../actions";
-import { useForm, Controller } from "react-hook-form";
+import { createPatientAndVisit } from "../actions";
+import { useForm, Controller, useFieldArray } from "react-hook-form";
 import {
   Card,
   CardContent,
@@ -53,6 +53,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { formatDateIndo } from "@/lib/utils/format";
+import { format } from "date-fns";
 
 export function VisitsFormDialog({
   patientList,
@@ -76,57 +77,67 @@ export function VisitsFormDialog({
     formState: { errors },
   } = useForm({
     defaultValues: {
-      id: "",
-      patient_name: "",
-      mr_number: "",
-      gender: "",
-      birth_date: "",
-      phone: "",
-      address: "",
-      isNewPatient: false,
+      patients: {
+        id: "",
+        patient_name: "",
+        mr_number: "",
+        gender: "",
+        birth_date: "",
+        phone: "",
+        address: "",
+        isNewPatient: false,
+      },
+      // visits
+      visits: {
+        date: "",
+        shift: "",
+        patient_id: "",
+        poly_destination: "Umum",
+        recipe_type: "Biasa",
+        total_amount: "",
+        payment: "",
+        payment_methode: "Cash",
+        create_by: "",
+      },
+      // treatment
+      treatments: [
+        {
+          visits_id: "",
+          treatment_name_id: "",
+          treatment_name: "",
+          operation_staff_id: "",
+          operation_staff: "",
+          assistant_staff_id: "",
+          assistant_staff: "",
+        },
+      ],
     },
   });
 
-  const isNewPatient = watch("isNewPatient");
-  const isSelectPatient = watch("patient_name");
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: "treatments",
+  });
+
+  const isNewPatient = watch("patients.isNewPatient");
+  const isSelectPatient = watch("patients.patient_name");
   const [selectedCard, setSelectedCard] = useState(false);
 
   const handleSubmitPatient = async (data: any) => {
-    const fd = new FormData();
-    Object.keys(data).forEach((key) => fd.append(key, data[key]));
-
-    console.log(data);
-
     startTransition(async () => {
-      const res = await createPatient(fd);
+      // Panggil satu fungsi yang menghandle semuanya
+      const res = await createPatientAndVisit(data);
+
       if (res.error) {
         toast.error(res.error);
       } else {
-        toast.success("Pasien berhasil disimpan");
+        toast.success("Data berhasil disimpan secara lengkap");
+        setIsOpen(false); // Tutup dialog
         reset();
         router.refresh();
       }
     });
   };
-
-  const [visits, setVisits] = useState({
-    date: "",
-    shift: "",
-    patient_id: "",
-    poly_destination: "Umum",
-    recipe_type: "Biasa",
-    total_amount: "",
-    payment: "",
-    payment_methode: "",
-    create_by: "",
-  });
-
-  const [visitTreatments, setVisitTreatments] = useState([
-    {
-      visits_id: "",
-      treatment_name_id: "",
-    },
-  ]);
 
   // --- Helper ---
   const generateMRNumber = () => {
@@ -137,31 +148,25 @@ export function VisitsFormDialog({
     return `${year}${month}${nextNumber}`;
   };
 
+  const getShiftDefault = () => {
+    const h = new Date().getHours();
+    if (h >= 7 && h < 14) return "Pagi";
+    if (h >= 14 && h < 21) return "Sore";
+    return "Malam";
+  };
+
   useEffect(() => {
     if (isNewPatient) {
-      setValue("mr_number", generateMRNumber());
+      setValue("patients.mr_number", generateMRNumber());
     }
   }, [isNewPatient]);
 
-  // --- Handler ---
-  const addTreatmentRow = () =>
-    setVisitTreatments([
-      ...visitTreatments,
-      {
-        visits_id: "",
-        treatment_name_id: "",
-      },
-    ]);
-
-  const removeTreatmentRow = (index: number) => {
-    setVisitTreatments(visitTreatments.filter((_, i) => i !== index));
-  };
-
-  const updateTreatment = (index: number, field: string, value: any) => {
-    const newTs = [...visitTreatments];
-    newTs[index] = { ...newTs[index], [field]: value };
-    setVisitTreatments(newTs);
-  };
+  useEffect(() => {
+    if (isOpen) {
+      setValue("visits.date", format(new Date(), "yyyy-MM-dd"));
+      setValue("visits.shift", getShiftDefault());
+    }
+  });
 
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
@@ -185,23 +190,25 @@ export function VisitsFormDialog({
               <div className="p-4 border border-border bg-background rounded-xl shadow-sm space-y-3">
                 <div className="flex justify-between items-center border-b pb-2">
                   <div className="font-bold text-xl">
-                    {getValues("patient_name")}
+                    {getValues("patients.patient_name")}
                   </div>
                   <div className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">
-                    {getValues("mr_number")}
+                    {getValues("patients.mr_number")}
                   </div>
                 </div>
                 <div className="flex flex-col gap-2 text-xm">
                   <div className="grid grid-cols-2">
                     <span className="font-medium truncate">
-                      {getValues("gender")}
+                      {getValues("patients.gender")}
                     </span>
                     <span className="font-medium truncate">
-                      {formatDateIndo(getValues("birth_date"))}
+                      {formatDateIndo(getValues("patients.birth_date"))}
                     </span>
                   </div>
                   <div className="flex flex-col">
-                    <span className="font-medium ">{getValues("address")}</span>
+                    <span className="font-medium ">
+                      {getValues("patients.address")}
+                    </span>
                   </div>
                 </div>
                 <div className="flex gap-2 pt-2">
@@ -227,7 +234,9 @@ export function VisitsFormDialog({
                       placeholder="Nama Sesuai KTP"
                       required
                       showClear
-                      onChange={(e) => setValue("patient_name", e.target.value)}
+                      onChange={(e) =>
+                        setValue("patients.patient_name", e.target.value)
+                      }
                       value={isSelectPatient}
                     />
                     <ComboboxContent>
@@ -239,13 +248,22 @@ export function VisitsFormDialog({
                                 key={item.id}
                                 value={item.patient_name}
                                 onClick={() => {
-                                  setValue("id", item.id);
-                                  setValue("patient_name", item.patient_name);
-                                  setValue("birth_date", item.birth_date);
-                                  setValue("gender", item.gender);
-                                  setValue("mr_number", item.mr_number);
-                                  setValue("address", item.address);
-                                  setValue("isNewPatient", false);
+                                  setValue("patients.id", item.id);
+                                  setValue(
+                                    "patients.patient_name",
+                                    item.patient_name,
+                                  );
+                                  setValue(
+                                    "patients.birth_date",
+                                    item.birth_date,
+                                  );
+                                  setValue("patients.gender", item.gender);
+                                  setValue(
+                                    "patients.mr_number",
+                                    item.mr_number,
+                                  );
+                                  setValue("patients.address", item.address);
+                                  setValue("patients.isNewPatient", false);
                                   setSelectedCard(true);
                                 }}
                               >
@@ -270,7 +288,9 @@ export function VisitsFormDialog({
                               type="button"
                               variant="ghost"
                               size="sm"
-                              onClick={() => setValue("isNewPatient", true)}
+                              onClick={() =>
+                                setValue("patients.isNewPatient", true)
+                              }
                               className="text-xs cursor-pointer"
                             >
                               <UserPlus className="w-3 h-3 mr-1" />{" "}
@@ -289,7 +309,7 @@ export function VisitsFormDialog({
                       {/* MR Number */}
                       <div className="flex flex-col gap-1">
                         <Label>Nomor RM</Label>
-                        <Input {...register("mr_number")} readOnly />
+                        <Input {...register("patients.mr_number")} readOnly />
                       </div>
 
                       {/* gender */}
@@ -297,7 +317,7 @@ export function VisitsFormDialog({
                         <Label>Jenis Kelamin</Label>
                         <Controller
                           control={control}
-                          name="gender"
+                          name="patients.gender"
                           rules={{ required: true }}
                           render={({ field }) => (
                             <Select
@@ -327,7 +347,9 @@ export function VisitsFormDialog({
                         <Label>Tanggal Lahir</Label>
                         <Input
                           type="date"
-                          {...register("birth_date", { required: true })}
+                          {...register("patients.birth_date", {
+                            required: true,
+                          })}
                         />
                       </div>
 
@@ -336,7 +358,7 @@ export function VisitsFormDialog({
                         <Label>Nomor HP</Label>
                         <Controller
                           control={control}
-                          name="phone"
+                          name="patients.phone"
                           render={({ field }) => (
                             <PatternFormat
                               customInput={Input}
@@ -355,187 +377,279 @@ export function VisitsFormDialog({
                     {/* Alamat */}
                     <div className="flex flex-col gap-1 w-full">
                       <Label>Alamat</Label>
-                      <Textarea required {...register("address")} />
+                      <Textarea required {...register("patients.address")} />
                     </div>
-                    <Button type="submit" className="cursor-pointer">
-                      Simpan Pasien
-                    </Button>
                   </div>
                 )}
               </div>
             )}
-          </form>
 
-          {/* Visits */}
-          <section className="flex flex-col gap-4">
-            <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-              Visit Patient
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="flex flex-col gap-1">
-                <Label>Poli Tujuan</Label>
-                <Select defaultValue={visits.poly_destination}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="Umum">Umum</SelectItem>
-                    <SelectItem value="Gigi">Gigi</SelectItem>
-                    <SelectItem value="Bidan">Kebidanan</SelectItem>
-                    <SelectItem value="Apotek">Apotek</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="flex flex-col gap-1">
-                <Label>Jenis Resep</Label>
-                <Select defaultValue={visits.recipe_type}>
-                  <SelectTrigger className="w-full">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="tidak_Ada">Tidak Ada</SelectItem>
-                    <SelectItem value="Biasa">Biasa</SelectItem>
-                    <SelectItem value="Racikan">Racikan</SelectItem>
-                    <SelectItem value="Rujuakan">Rujukan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          </section>
-
-          {/* Treatments */}
-          <div className="space-y-4">
-            <div className="flex justify-between items-center">
+            {/* Visits */}
+            <section className="flex flex-col gap-4">
               <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                Tindakan Medis
+                Visit Patient
               </h3>
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={addTreatmentRow}
-              >
-                <Plus className="h-4 w-4 mr-1" /> Tambah
-              </Button>
-            </div>
-
-            {visitTreatments.map((t, idx) => (
-              <div key={idx} className="flex gap-2 border-b pb-4">
-                <div className="flex flex-col gap-2">
-                  <Combobox items={treatmentsList}>
-                    <ComboboxInput showClear placeholder="Nama Tindakan" />
-                    <ComboboxContent className="pointer-events-auto">
-                      <ComboboxList className="max-h-43 overflow-y-auto border rounded-md shadow-sm bg-popover">
-                        {(item) => (
-                          <ComboboxItem
-                            key={item.id}
-                            value={item.treatment_name}
-                            onClick={() =>
-                              updateTreatment(
-                                idx,
-                                "treatment_name_id",
-                                item.treatment_name,
-                              )
-                            }
-                          >
-                            {item.treatment_name}
-                          </ComboboxItem>
-                        )}
-                      </ComboboxList>
-                    </ComboboxContent>
-                  </Combobox>
-                  <div className="flex gap-2">
-                    <Combobox items={staffList}>
-                      <ComboboxInput placeholder="Operator" showClear />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(item) => (
-                            <ComboboxItem key={item.id} value={item.full_name}>
-                              {item.full_name}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                    <Combobox items={staffList}>
-                      <ComboboxInput placeholder="Asisten" showClear />
-                      <ComboboxContent>
-                        <ComboboxList>
-                          {(item) => (
-                            <ComboboxItem key={item.id} value={item.full_name}>
-                              {item.full_name}
-                            </ComboboxItem>
-                          )}
-                        </ComboboxList>
-                      </ComboboxContent>
-                    </Combobox>
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                {/* poly destination */}
+                <div className="flex flex-col gap-1">
+                  <Label>Poli Tujuan</Label>
+                  <Select defaultValue="Umum">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Umum">Umum</SelectItem>
+                      <SelectItem value="Gigi">Gigi</SelectItem>
+                      <SelectItem value="Bidan">Kebidanan</SelectItem>
+                      <SelectItem value="Apotek">Apotek</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
+
+                {/* recipe type */}
+                <div className="flex flex-col gap-1">
+                  <Label>Jenis Resep</Label>
+                  <Select defaultValue="Biasa">
+                    <SelectTrigger className="w-full">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="tidak_Ada">Tidak Ada</SelectItem>
+                      <SelectItem value="Biasa">Biasa</SelectItem>
+                      <SelectItem value="Racikan">Racikan</SelectItem>
+                      <SelectItem value="Rujuakan">Rujukan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+            </section>
+
+            {/* Payments */}
+            <div className="grid grid-cols-3 gap-4">
+              <div className="flex flex-col gap-1">
+                <Label>Total Bayar</Label>
+                <Controller
+                  control={control}
+                  name="visits.total_amount"
+                  render={({ field }) => (
+                    <NumericFormat
+                      customInput={Input}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="Rp. "
+                      placeholder="Rp. 0"
+                      onValueChange={(v) => {
+                        field.onChange(v.value);
+                      }}
+                    />
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label>Terbayar</Label>
+                <Controller
+                  control={control}
+                  name="visits.payment"
+                  render={({ field }) => (
+                    <NumericFormat
+                      customInput={Input}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      prefix="Rp. "
+                      placeholder="Rp. 0"
+                      onValueChange={(v) => {
+                        field.onChange(v.value);
+                      }}
+                    />
+                  )}
+                />
+              </div>
+              <div className="flex flex-col gap-1">
+                <Label>Metode</Label>
+                <Controller
+                  control={control}
+                  name="visits.payment_methode"
+                  rules={{ required: true }}
+                  render={({ field }) => (
+                    <Select onValueChange={field.onChange} value={field.value}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue defaultValue="Cash" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="BPJS">BPJS</SelectItem>
+                        <SelectItem value="Cash">Cash</SelectItem>
+                        <SelectItem value="Qris">Qris</SelectItem>
+                        <SelectItem value="Trasfer">Transfer</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  )}
+                />
+              </div>
+            </div>
+            {/* Treatments */}
+            <div className="space-y-4">
+              <div className="flex justify-between items-center">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  Tindakan Medis
+                </h3>
                 <Button
-                  variant="ghost"
-                  size="icon"
+                  type="button"
+                  variant="outline"
+                  size="sm"
                   onClick={() =>
-                    setVisitTreatments(
-                      visitTreatments.filter((_, i) => i !== idx),
-                    )
+                    append({
+                      visits_id: "",
+                      treatment_name_id: "",
+                      treatment_name: "",
+                      operation_staff_id: "",
+                      operation_staff: "",
+                      assistant_staff_id: "",
+                      assistant_staff: "",
+                    })
                   }
                 >
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Plus className="h-4 w-4 mr-1" /> Tambah
                 </Button>
               </div>
-            ))}
-          </div>
 
-          {/* Payments */}
-          <div className="grid grid-cols-3 gap-4">
-            <div className="flex flex-col gap-1">
-              <Label>Total Bayar</Label>
-              <NumericFormat
-                customInput={Input}
-                onChange={(e) =>
-                  setVisits({ ...visits, total_amount: e.target.value })
-                }
-                thousandSeparator="."
-                decimalSeparator=","
-                prefix="Rp. "
-                placeholder="Rp. 0"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label>Terbayar</Label>
-              <NumericFormat
-                customInput={Input}
-                thousandSeparator="."
-                decimalSeparator=","
-                prefix="Rp. "
-                placeholder="Rp. 0"
-              />
-            </div>
-            <div className="flex flex-col gap-1">
-              <Label>Metode</Label>
-              <Select>
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="BPJS">BPJS</SelectItem>
-                  <SelectItem value="Cash">Cash</SelectItem>
-                  <SelectItem value="Qris">Qris</SelectItem>
-                  <SelectItem value="Trasfer">Transfer</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+              {fields.map((t, idx) => (
+                <div key={idx} className="flex gap-2 border-b pb-4">
+                  <div className="flex flex-col gap-2">
+                    <Combobox items={treatmentsList}>
+                      <ComboboxInput
+                        showClear
+                        placeholder="Nama Tindakan"
+                        onChange={(e) =>
+                          setValue(
+                            `treatments.${idx}.treatment_name_id`,
+                            e.target.value,
+                          )
+                        }
+                        value={watch(`treatments.${idx}.treatment_name`)}
+                      />
+                      <ComboboxContent className="pointer-events-auto">
+                        <ComboboxList className="max-h-43 overflow-y-auto border rounded-md shadow-sm bg-popover">
+                          {(item) => (
+                            <ComboboxItem
+                              key={item.id}
+                              value={item.id}
+                              onClick={() => {
+                                setValue(
+                                  `treatments.${idx}.treatment_name_id`,
+                                  item.id,
+                                );
+                                setValue(
+                                  `treatments.${idx}.treatment_name`,
+                                  item.treatment_name,
+                                );
+                              }}
+                            >
+                              {item.treatment_name}
+                            </ComboboxItem>
+                          )}
+                        </ComboboxList>
+                      </ComboboxContent>
+                    </Combobox>
 
-          <DialogFooter>
-            <div className="mr-auto text-lg font-bold">
-              Total:
-              {visits.total_amount}
+                    <div className="flex gap-2">
+                      <Combobox items={staffList}>
+                        <ComboboxInput
+                          showClear
+                          placeholder="Operator"
+                          onChange={(e) =>
+                            setValue(
+                              `treatments.${idx}.operation_staff_id`,
+                              e.target.value,
+                            )
+                          }
+                          value={watch(`treatments.${idx}.operation_staff`)}
+                        />
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem
+                                key={item.id}
+                                value={item.id}
+                                onClick={() => {
+                                  setValue(
+                                    `treatments.${idx}.operation_staff_id`,
+                                    item.id,
+                                  );
+                                  setValue(
+                                    `treatments.${idx}.operation_staff`,
+                                    item.full_name,
+                                  );
+                                }}
+                              >
+                                {item.full_name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                      <Combobox items={staffList}>
+                        <ComboboxInput
+                          showClear
+                          placeholder="Asisten"
+                          onChange={(e) =>
+                            setValue(
+                              `treatments.${idx}.assistant_staff_id`,
+                              e.target.value,
+                            )
+                          }
+                          value={watch(`treatments.${idx}.assistant_staff`)}
+                        />
+                        <ComboboxContent>
+                          <ComboboxList>
+                            {(item) => (
+                              <ComboboxItem
+                                key={item.id}
+                                value={item.id}
+                                onClick={() => {
+                                  setValue(
+                                    `treatments.${idx}.assistant_staff_id`,
+                                    item.id,
+                                  );
+                                  setValue(
+                                    `treatments.${idx}.assistant_staff`,
+                                    item.full_name,
+                                  );
+                                }}
+                              >
+                                {item.full_name}
+                              </ComboboxItem>
+                            )}
+                          </ComboboxList>
+                        </ComboboxContent>
+                      </Combobox>
+                    </div>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => remove(idx)}
+                  >
+                    <Trash2 className="h-4 w-4 text-destructive" />
+                  </Button>
+                </div>
+              ))}
             </div>
-            <Button type="submit" disabled={isPending}>
-              Simpan Kunjungan
-            </Button>
-          </DialogFooter>
+
+            <DialogFooter>
+              <div className="mr-auto font-bold">
+                <NumericFormat
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="Rp. "
+                  placeholder="Rp. 0"
+                  value={watch("visits.total_amount")}
+                />
+              </div>
+              <Button type="submit" disabled={isPending}>
+                Simpan Kunjungan
+              </Button>
+            </DialogFooter>
+          </form>
         </div>
       </DialogContent>
     </Dialog>
