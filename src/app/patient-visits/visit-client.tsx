@@ -23,6 +23,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { DateRange } from "react-day-picker";
 import { endOfDay, format, isWithinInterval, startOfDay } from "date-fns";
 import { id } from "date-fns/locale";
+import { DeleteConfirmDialog } from "./_componenets/delete-confirm-dialog";
 
 export default function VisitClient({
   patientList,
@@ -31,6 +32,16 @@ export default function VisitClient({
   visitsList,
 }: any) {
   const [isOpen, setIsOpen] = useState(false);
+  const [editing, setEditing] = useState<any>(null);
+  const [deleteTarget, setDeleteTarget] = useState<any>(null);
+  const [isDialogOpsOpen, setIsDialogOpsOpen] = useState(false);
+  const [isAlertDeleteOpen, setIsAlertDeleteOpen] = useState(false);
+
+  const handleOpenEdit = (row: any) => {
+    setEditing(row);
+    setIsDialogOpsOpen(true);
+  };
+
   const [date, setDate] = React.useState<DateRange | undefined>({
     from: startOfDay(new Date()),
     to: endOfDay(new Date()),
@@ -102,7 +113,12 @@ export default function VisitClient({
         {/* Mobile Card View */}
 
         {/* Desktop View */}
-        <VisitListDesktop visitsList={filteredVisits} />
+        <VisitListDesktop
+          visitsList={filteredVisits}
+          handleOpenEdit={handleOpenEdit}
+          setDeleteTarget={setDeleteTarget}
+          setIsAlertDeleteOpen={setIsAlertDeleteOpen}
+        />
       </div>
 
       <VisitFormDialog
@@ -111,6 +127,12 @@ export default function VisitClient({
         treatmentsList={treatments}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
+      />
+
+      <DeleteConfirmDialog
+        isAlertDeleteOpen={isAlertDeleteOpen}
+        setIsAlertDeleteOpen={setIsAlertDeleteOpen}
+        deleteTarget={deleteTarget}
       />
     </div>
   );

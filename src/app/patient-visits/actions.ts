@@ -97,3 +97,19 @@ export async function createPatientAndVisit(data: any) {
     return { error: err.message || "Terjadi kesalahan internal" };
   }
 }
+
+// funsgi delete absensi
+export async function delleteVisits(
+  id : string
+): Promise<StaffActionState> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("patient_visits")
+    .delete()
+    .eq("id", id);
+  if (error) {
+    return { error: error.message };
+  }
+  revalidatePath("/patient_visits");
+  return { ok: true };
+}

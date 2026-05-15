@@ -52,6 +52,7 @@ export function AttendanceListDesktop({
                     variant="outline"
                     size="sm"
                     onClick={() => handleOpenEdit(row)}
+                    className="cursor-pointer"
                   >
                     <Edit3 className="h-3 w-3 text-blue-600" />
                   </Button>
@@ -62,6 +63,7 @@ export function AttendanceListDesktop({
                       setDeleteTarget(row);
                       setIsAlertDeleteOpen(true);
                     }}
+                    className="cursor-pointer"
                   >
                     <Trash2 className="h-3 w-3" />
                   </Button>

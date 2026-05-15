@@ -28,6 +28,9 @@ export function VisitTableShell({ children }: IProps) {
           {tableHead.map((r) => (
             <TableHead key={r}>{r}</TableHead>
           ))}
+          <TableHead className="text-center w-32 font-semibold whitespace-nowrap">
+            Aksi
+          </TableHead>
         </TableHeader>
         <TableBody>{children}</TableBody>
       </Table>
