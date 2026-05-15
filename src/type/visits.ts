@@ -9,5 +9,5 @@ export interface IVisits {
   payment: number;
   payment_methode: string;
   create_by: string;
-  patients: [{ patient_name: string }];
+  patients: { patient_name: string };
 }
