@@ -29,7 +29,7 @@ export async function createPatinet(data: any) {
     } = await supabase.auth.getUser();
     if (!user) return { error: "Unauthenticated" };
 
-    const { data: newPatient,error: pError } = await supabase
+    const { data: newPatient, error: pError } = await supabase
       .from("patients")
       .insert({
         patient_name: data.patient_name,
@@ -45,7 +45,37 @@ export async function createPatinet(data: any) {
 
     if (pError) throw new Error(`Gagal simpan pasien: ${pError.message}`);
 
-    return { ok: true, id : newPatient?.id };
+    return { ok: true, id: newPatient?.id };
+  } catch (err: any) {
+    return { error: err.message };
+  }
+}
+
+// --- function edit patient ---
+export async function editPatient(data: any) {
+  const supabase = await createClient();
+  const { isGuest } = await getAuthContext(supabase);
+  try {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) return { error: "Unauthenticated" };
+
+    const { error: pError } = await supabase
+      .from("patients")
+      .update({
+        patient_name: data.patient_name,
+        mr_number: data.mr_number,
+        gender: data.gender,
+        birth_date: data.birth_date,
+        phone: data.phone,
+        address: data.address,
+      })
+      .eq("id", data.id);
+
+    if (pError) throw new Error(`Gagal simpan pasien: ${pError.message}`);
+
+    return { ok: true };
   } catch (err: any) {
     return { error: err.message };
   }

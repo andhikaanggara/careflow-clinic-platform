@@ -18,8 +18,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateIndo } from "@/lib/utils/format";
-import { UserPlus } from "lucide-react";
-import { useEffect } from "react";
+import { Edit3, UserPlus } from "lucide-react";
 import { Controller } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
 
@@ -31,25 +30,12 @@ export function PatientFormSection({
   setValue,
   register,
   control,
+  reset,
+  newPatient,
+  setNewPatient,
+  setIsEditPatient,
+  generateMRNumber,
 }: any) {
-  const isNewPatient = watch("patients.isNewPatient");
-
-  // --- Helper ---
-  const generateMRNumber = () => {
-    const now = new Date();
-    const year = now.getFullYear().toString().slice(-2);
-    const month = (now.getMonth() + 1).toString().padStart(2, "0");
-    const nextNumber = (patientList.length + 1).toString().padStart(3, "0");
-    return `${year}${month}${nextNumber}`;
-  };
-
-  // --- auto fill MR Number ---
-  useEffect(() => {
-    if (isNewPatient) {
-      setValue("patients.mr_number", generateMRNumber());
-    }
-  }, [isNewPatient]);
-
   return (
     <section>
       <FormCombobox
@@ -62,7 +48,7 @@ export function PatientFormSection({
         onSelect={(item) => {
           setValue("visits.patient_id", item.id);
           setValue("patients.id", item.id);
-          setValue("patients.isNewPatient", false);
+          setNewPatient(false);
           setSelectedCard(true);
         }}
         onBlur={(e) => setValue("patients.patient_name", e.target.value)}
@@ -86,10 +72,11 @@ export function PatientFormSection({
               variant="ghost"
               size="sm"
               onClick={() => {
-                (setValue("patients.isNewPatient", true),
-                  setSelectedCard(false));
-                setValue("visits.patient_id", "");
-                setValue("patients.id", "");
+                setNewPatient(true);
+                setIsEditPatient(false);
+                setSelectedCard(false);
+                reset();
+                setValue("patients.mr_number", generateMRNumber());
               }}
               className="w-full text-xs cursor-pointer py-2"
             >
@@ -122,6 +109,26 @@ export function PatientFormSection({
                 )?.mr_number
               }
             </span>
+            <Button
+              variant={"outline"}
+              size="sm"
+              onClick={(data: any) => {
+                setSelectedCard(false);
+                setNewPatient(true); // reset form
+                setIsEditPatient(true);
+                patientList.find((p: any) => {
+                  if (p.id === watch("visits.patient_id")) {
+                    setValue("patients.mr_number", p.mr_number);
+                    setValue("patients.gender", p.gender);
+                    setValue("patients.birth_date", p.birth_date);
+                    setValue("patients.address", p.address);
+                    setValue("patients.phone", p.phone);
+                  }
+                });
+              }}
+            >
+              <Edit3 />
+            </Button>
           </div>
           <div className="flex flex-col">
             <span className="font-medium ">
@@ -136,7 +143,7 @@ export function PatientFormSection({
       ) : (
         <div className="flex flex-col gap-4 mt-4">
           {/* input patient */}
-          {isNewPatient && (
+          {newPatient && (
             <div className="flex flex-col gap-4 animate-in fade-in slide-in-from-top-2">
               <div className="grid grid-cols-2 gap-2 ">
                 {/* MR Number */}

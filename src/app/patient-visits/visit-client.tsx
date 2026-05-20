@@ -25,12 +25,12 @@ export default function VisitClient({
   visitsList,
 }: any) {
   const [isOpen, setIsOpen] = useState(false);
-  const [editing, setEditing] = useState<any>(null);
+  const [editVisit, setEditVisit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [isAlertDeleteOpen, setIsAlertDeleteOpen] = useState(false);
 
   const handleOpenEdit = (row: any) => {
-    setEditing(row);
+    setEditVisit(row);
     setIsOpen(true);
   };
 
@@ -63,8 +63,9 @@ export default function VisitClient({
         icon={ClipboardList}
         actionLabel="Registrasi Pasien"
         onAction={() => {
-          setEditing(null);
+          setEditVisit(null);
           setIsOpen(true);
+          
         }}
       />
 
@@ -122,7 +123,7 @@ export default function VisitClient({
         treatmentsList={treatments}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
-        editing={editing}
+        editVisit={editVisit}
       />
 
       <DeleteConfirmDialog

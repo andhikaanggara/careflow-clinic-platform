@@ -15,7 +15,12 @@ import {
 } from "@/components/ui/dialog";
 
 // Action
-import { createPatinet, createTreatments, createVisits } from "../actions";
+import {
+  createPatinet,
+  createTreatments,
+  createVisits,
+  editPatient,
+} from "../actions";
 import { useForm } from "react-hook-form";
 import { format } from "date-fns";
 import { PatientFormSection } from "./form-section/patient-form-section";
@@ -29,7 +34,7 @@ export function VisitFormDialog({
   treatmentsList,
   setIsOpen,
   isOpen,
-  editing,
+  editVisit,
 }: any) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
@@ -53,7 +58,6 @@ export function VisitFormDialog({
         birth_date: "",
         phone: "",
         address: "",
-        isNewPatient: true,
       },
       // visits
       visits: {
@@ -74,6 +78,8 @@ export function VisitFormDialog({
   });
 
   const [selectedCard, setSelectedCard] = useState(false);
+  const [newPatient, setNewPatient] = useState(true);
+  const [isEditPatient, setIsEditPatient] = useState(false);
 
   const getShiftDefault = () => {
     const h = new Date().getHours();
@@ -82,12 +88,31 @@ export function VisitFormDialog({
     return "Malam";
   };
 
+  // --- Helper ---
+  const generateMRNumber = () => {
+    const now = new Date();
+    const year = now.getFullYear().toString().slice(-2);
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
+    const nextNumber = (patientList.length + 1).toString().padStart(3, "0");
+    return `${year}${month}${nextNumber}`;
+  };
+
   useEffect(() => {
     if (isOpen) {
+      setNewPatient(true);
+      setIsEditPatient(false);
+      setSelectedCard(false);
+      reset();
       setValue("visits.date", format(new Date(), "yyyy-MM-dd"));
       setValue("visits.shift", getShiftDefault());
+      setValue("patients.mr_number", generateMRNumber());
     }
   }, [isOpen]);
+
+  useEffect(() => {
+    if (editVisit) {
+    }
+  }, [editVisit]);
 
   const handleSubmitPatient = async (data: any) => {
     console.log("Data yang akan disubmit:", data);
@@ -96,7 +121,7 @@ export function VisitFormDialog({
         let currentPatientId = data.visits.patient_id;
         let currentVisitsId = data.visits.id;
         // --- handle create patient ---
-        if (data.patients.isNewPatient && !currentPatientId) {
+        if (!currentPatientId) {
           const patientRes = await createPatinet(data.patients);
           if (patientRes.error) {
             toast.error(patientRes.error);
@@ -106,6 +131,15 @@ export function VisitFormDialog({
           currentPatientId = patientRes?.id;
           setValue("patients.id", currentPatientId);
           setValue("visits.patient_id", currentPatientId);
+        }
+
+        // --- handle edit patient ---
+        if (editPatient) {
+          const editPatientRes = await editPatient(data.patients);
+          if (editPatientRes.error) {
+            toast.error(editPatientRes.error);
+            return;
+          }
         }
 
         // --- handle create visits ---
@@ -148,9 +182,8 @@ export function VisitFormDialog({
             return;
           }
         }
-        // --- Selesai dengan Sukses ---
         toast.success(
-          editing ? "Data berhasil diperbarui" : "Data berhasil disimpan",
+          editVisit ? "Data berhasil diperbarui" : "Data berhasil disimpan",
         );
         setIsOpen(false);
         reset();
@@ -167,7 +200,7 @@ export function VisitFormDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editing ? "Edit Kunjungan" : "Registrasi Kunjungan Baru"}
+            {editVisit ? "Edit Kunjungan" : "Registrasi Kunjungan Baru"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
@@ -191,6 +224,11 @@ export function VisitFormDialog({
               setValue={setValue}
               register={register}
               control={control}
+              newPatient={newPatient}
+              setNewPatient={setNewPatient}
+              isEditPatient={isEditPatient}
+              setIsEditPatient={setIsEditPatient}
+              generateMRNumber={generateMRNumber}
             />
 
             {/* Visits */}
@@ -222,7 +260,7 @@ export function VisitFormDialog({
               <Button type="submit" disabled={isPending}>
                 {isPending
                   ? "Menyimpan..."
-                  : editing
+                  : editVisit
                     ? "Perbarui Kunjungan"
                     : "Simpan Kunjungan"}
               </Button>
