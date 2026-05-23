@@ -4,6 +4,7 @@ import { IVisits } from "@/type/visits";
 import { formatDateIndo } from "@/lib/utils/format";
 import { Button } from "@/components/ui/button";
 import { Edit3, Trash2 } from "lucide-react";
+import { NumericFormat } from "react-number-format";
 
 interface IProps {
   visitsList: IVisits[];
@@ -39,7 +40,15 @@ export function VisitListDesktop({
               <TableCell>{row.patients.patient_name}</TableCell>
               <TableCell>{row.poly_destination}</TableCell>
               <TableCell>{row.recipe_type}</TableCell>
-              <TableCell>{row.total_amount}</TableCell>
+              <TableCell>
+                <NumericFormat
+                  thousandSeparator="."
+                  decimalSeparator=","
+                  prefix="Rp. "
+                  placeholder="Rp. 0"
+                  value={row.total_amount}
+                />
+              </TableCell>
               <TableCell>{row.payment_methode}</TableCell>
               <TableCell className="text-right">
                 <div className="flex justify-center gap-2">

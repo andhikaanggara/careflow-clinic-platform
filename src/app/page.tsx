@@ -48,7 +48,7 @@ export default function Home() {
             target="_blank"
             rel="noopener noreferrer"
           >
-            "Kunyuk"
+            Next.js
           </a>
         </div>
       </main>

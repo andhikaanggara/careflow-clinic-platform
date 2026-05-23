@@ -3,6 +3,11 @@
 import { useEffect, useRef, useState, useTransition } from "react";
 import { NumericFormat } from "react-number-format";
 import { useRouter } from "next/navigation";
+import { FormProvider, useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { format } from "date-fns";
+import { toast } from "sonner";
+import * as z from "zod";
 
 // UI Component
 import { Button } from "@/components/ui/button";
@@ -13,43 +18,122 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-// Action
-import {
-  createPatinet,
-  createTreatments,
-  createVisits,
-  editPatient,
-} from "../actions";
-import { useForm } from "react-hook-form";
-import { format } from "date-fns";
 import { PatientFormSection } from "./form-section/patient-form-section";
 import { VisitFormSection } from "./form-section/visit-form-section";
 import { TreatmentFormSelection } from "./form-section/treatment-form-section";
-import { toast } from "sonner";
 
+// Server action
+import {
+  createPatient,
+  createTreatments,
+  createVisits,
+  editPatient,
+  editVisits,
+} from "../actions";
+
+// --- Skema zod validation ---
+// 1. Aturan Dasar Kunjungan (Tanpa field pasien)
+const baseVisitSchema = z.object({
+  id: z.string().optional(),
+  date: z.string().min(1, "Tanggal wajib diisi"),
+  shift: z.string().min(1, "Shift wajib diisi"),
+  patient_id: z.string().optional(),
+  poly_destination: z.string().min(1, "Poliklinik tujuan wajib diisi"),
+  recipe_type: z.string().min(1, "Jenis resep wajib diisi"),
+  total_amount: z.string(),
+  payment: z.string(),
+  payment_methode: z.string().min(1, "Metode pembayaran wajib diisi"),
+  create_by: z.string().optional(),
+  treatments: z.array(z.any()).optional().default([]),
+});
+
+// 2. SKEMA A: Untuk Pasien Lama (Sangat Longgar, field pasien boleh kosong)
+const oldPatientSchema = baseVisitSchema.extend({
+  patients: z.object({
+    id: z.string().optional(),
+    patient_name: z.string().optional(),
+    mr_number: z.string().optional(),
+    gender: z.string().optional(),
+    birth_date: z.string().optional(),
+    phone: z.string().optional(),
+    address: z.string().optional(),
+  }),
+});
+
+// 3. SKEMA B: Untuk Pasien Baru (Sangat Ketat, semua field pasien wajib)
+const newPatientSchema = baseVisitSchema.extend({
+  patients: z.object({
+    id: z.string().optional(),
+    patient_name: z.string().min(3, "Nama pasien minimal 3 karakter"),
+    mr_number: z.string().min(1, "Nomor MR wajib diisi"),
+    gender: z.string().min(1, "Jenis kelamin wajib diisi"),
+    birth_date: z.string().min(1, "Tanggal lahir wajib diisi"),
+    phone: z.string().min(10, "Nomor telepon minimal 10 digit"),
+    address: z.string().min(5, "Alamat minimal 5 karakter"),
+  }),
+});
+
+// Berikan tipe data gabungan agar VS Code tidak eror
+type VisitFormValues =
+  | z.input<typeof oldPatientSchema>
+  | z.input<typeof newPatientSchema>;
+
+// --- Global Helper function ---
+const validateResponse = (res: any): any => {
+  if (res?.error) throw new Error(res.error);
+  return res?.id ?? res?.data?.id;
+};
+
+const filterValidTreatments = (treatments: any[], visitId: string) => {
+  if (!treatments) return [];
+  return treatments
+    .filter(
+      (t) =>
+        t && t.treatment_name_id !== "" && t.treatment_name_id !== undefined,
+    )
+    .map((t) => ({ ...t, visit_id: visitId }));
+};
+
+const getShiftDefault = () => {
+  const h = new Date().getHours();
+  if (h >= 7 && h < 14) return "Pagi";
+  if (h >= 14 && h < 21) return "Sore";
+  return "Malam";
+};
+
+// --- Main Component ---
 export function VisitFormDialog({
-  patientList,
+  patientList = [],
   staffList,
   treatmentsList,
   setIsOpen,
   isOpen,
-  editVisit,
+  isEditVisit,
 }: any) {
   const [isPending, startTransition] = useTransition();
   const router = useRouter();
 
-  // --- State ---
-  const {
-    register,
-    handleSubmit,
-    watch,
-    setValue,
-    control,
-    reset,
-    formState: { errors },
-  } = useForm({
+  const [selectedCard, setSelectedCard] = useState(false);
+  const [newPatient, setNewPatient] = useState(true);
+  const [isEditPatient, setIsEditPatient] = useState(false);
+
+  const currentSchema = newPatient ? newPatientSchema : oldPatientSchema;
+
+  // --- Initialize React Hook Form ---
+  const methods = useForm<VisitFormValues>({
+    resolver: zodResolver(currentSchema),
     defaultValues: {
+      id: "",
+      date: format(new Date(), "yyyy-MM-dd"),
+      shift: getShiftDefault(),
+      patient_id: "",
+      poly_destination: "Umum",
+      recipe_type: "Biasa",
+      total_amount: "",
+      payment: "",
+      payment_methode: "Cash",
+      create_by: "",
+      // patient
       patients: {
         id: "",
         patient_name: "",
@@ -59,34 +143,12 @@ export function VisitFormDialog({
         phone: "",
         address: "",
       },
-      // visits
-      visits: {
-        id: "",
-        date: "",
-        shift: "",
-        patient_id: "",
-        poly_destination: "Umum",
-        recipe_type: "Biasa",
-        total_amount: "",
-        payment: "",
-        payment_methode: "Cash",
-        create_by: "",
-      },
       // treatment
       treatments: [],
     },
   });
 
-  const [selectedCard, setSelectedCard] = useState(false);
-  const [newPatient, setNewPatient] = useState(true);
-  const [isEditPatient, setIsEditPatient] = useState(false);
-
-  const getShiftDefault = () => {
-    const h = new Date().getHours();
-    if (h >= 7 && h < 14) return "Pagi";
-    if (h >= 14 && h < 21) return "Sore";
-    return "Malam";
-  };
+  const { handleSubmit, watch, reset, setValue } = methods;
 
   // --- Helper ---
   const generateMRNumber = () => {
@@ -99,98 +161,92 @@ export function VisitFormDialog({
 
   useEffect(() => {
     if (isOpen) {
-      setNewPatient(true);
-      setIsEditPatient(false);
-      setSelectedCard(false);
-      reset();
-      setValue("visits.date", format(new Date(), "yyyy-MM-dd"));
-      setValue("visits.shift", getShiftDefault());
-      setValue("patients.mr_number", generateMRNumber());
+      if (!isEditVisit) {
+        setNewPatient(true);
+        setIsEditPatient(false);
+        setSelectedCard(false);
+        reset();
+        setValue("patients.mr_number", generateMRNumber());
+      } else {
+        reset(isEditVisit);
+        setValue("patient_id", isEditVisit.patient_id);
+        setValue("patients.id", isEditVisit.patients?.id);
+        setNewPatient(false);
+        setSelectedCard(true);
+        setIsEditPatient(false);
+        console.log("form state", watch());
+      }
     }
-  }, [isOpen]);
+  }, [isOpen, isEditVisit]);
 
-  useEffect(() => {
-    if (editVisit) {
-    }
-  }, [editVisit]);
-
-  const handleSubmitPatient = async (data: any) => {
-    console.log("Data yang akan disubmit:", data);
+  const handleSubmitVisit = async (data: any) => {
     startTransition(async () => {
+      console.log("submit data", data);
+
       try {
-        let currentPatientId = data.visits.patient_id;
-        let currentVisitsId = data.visits.id;
-        // --- handle create patient ---
+        let currentPatientId = data.patient_id;
+        let currentVisitsId = data.id;
+
+        // --- create patient ---
         if (!currentPatientId) {
-          const patientRes = await createPatinet(data.patients);
-          if (patientRes.error) {
-            toast.error(patientRes.error);
-            return;
-          }
+          const patientRes = await createPatient(data.patients);
+          currentPatientId = validateResponse(patientRes);
+
           // inset patient id to visits
-          currentPatientId = patientRes?.id;
           setValue("patients.id", currentPatientId);
-          setValue("visits.patient_id", currentPatientId);
+          setValue("patient_id", currentPatientId);
         }
-
-        // --- handle edit patient ---
-        if (editPatient) {
+        if (isEditPatient) {
+          // --- edit patient ---
           const editPatientRes = await editPatient(data.patients);
-          if (editPatientRes.error) {
-            toast.error(editPatientRes.error);
-            return;
-          }
+          validateResponse(editPatientRes);
         }
 
-        // --- handle create visits ---
+        // --- manaje visit payload ---
         const visitPayload = {
-          ...data.visits,
+          ...data,
           patient_id: currentPatientId,
+          total_amount: Number(data.total_amount) || 0,
+          payment: Number(data.payment) || 0,
         };
-        const visitsRes = await createVisits(visitPayload);
 
-        if (visitsRes?.error) {
-          toast.error(visitsRes?.error);
-          return;
-        }
-        // inset visit id to treatments
-        currentVisitsId = visitsRes?.id;
-        if (currentVisitsId) {
-          setValue("visits.id", currentVisitsId);
-        }
+        // --- create visits ---
+        if (!isEditVisit) {
+          const visitsRes = await createVisits(visitPayload);
+          currentVisitsId = validateResponse(visitsRes);
 
-        // --- handle create treatments ---
-        // clear empty treatments
-        const validTreatments =
-          data.treatments?.filter(
-            (t: any) =>
-              t &&
-              t.treatment_name_id !== "" &&
-              t.treatment_name_id !== undefined,
-          ) || [];
-
-        if (validTreatments.length > 0) {
-          // map tretment with visit_id
-          const finalizedTreatments = validTreatments.map((t: any) => ({
-            ...t,
-            visit_id: currentVisitsId,
-          }));
-
-          const treatmentsRes = await createTreatments(finalizedTreatments);
-          if (treatmentsRes?.error) {
-            toast.error(treatmentsRes.error);
-            return;
+          // inset visit id to treatments
+          if (currentVisitsId) {
+            setValue("id", currentVisitsId);
           }
+        } else {
+          // --- edit visits ---
+          const editVisitsRes = await editVisits(visitPayload);
+          validateResponse(editVisitsRes);
         }
+
+        // handle treatments
+        const finalizedTreatments = filterValidTreatments(
+          data.treatments,
+          currentVisitsId,
+        );
+
+        // --- create treatments ---
+        if (finalizedTreatments.length > 0) {
+          const treatmentsRes = await createTreatments(finalizedTreatments);
+          validateResponse(treatmentsRes);
+        }
+
         toast.success(
-          editVisit ? "Data berhasil diperbarui" : "Data berhasil disimpan",
+          isEditVisit ? "Data berhasil diperbarui" : "Data berhasil disimpan",
         );
         setIsOpen(false);
         reset();
         router.refresh();
-      } catch (error) {
-        console.error("Submit Error:", error);
-        toast.error("Terjadi kesalahan sistem saat menyimpan data.");
+      } catch (error: any) {
+        toast.error(
+          error.message || "Terjadi kesalahan sistem saat menyimpan data.",
+        );
       }
     });
   };
@@ -200,72 +256,62 @@ export function VisitFormDialog({
       <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>
-            {editVisit ? "Edit Kunjungan" : "Registrasi Kunjungan Baru"}
+            {isEditVisit ? "Edit Kunjungan" : "Registrasi Kunjungan Baru"}
           </DialogTitle>
         </DialogHeader>
         <div className="space-y-6">
           {/* Data Patient */}
-          <form
-            onSubmit={handleSubmit(handleSubmitPatient)}
-            className="flex flex-col gap-4"
-          >
-            <div>
-              <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
-                Patient Data
-              </h3>
-            </div>
-
-            <PatientFormSection
-              patientList={patientList}
-              selectedCard={selectedCard}
-              setSelectedCard={setSelectedCard}
-              reset={reset}
-              watch={watch}
-              setValue={setValue}
-              register={register}
-              control={control}
-              newPatient={newPatient}
-              setNewPatient={setNewPatient}
-              isEditPatient={isEditPatient}
-              setIsEditPatient={setIsEditPatient}
-              generateMRNumber={generateMRNumber}
-            />
-
-            {/* Visits */}
-            <VisitFormSection
-              control={control}
-              setValue={setValue}
-              watch={watch}
-            />
-
-            {/* Treatments */}
-            <TreatmentFormSelection
-              treatmentsList={treatmentsList}
-              staffList={staffList}
-              control={control}
-              setValue={setValue}
-              watch={watch}
-            />
-
-            <DialogFooter>
-              <div className="mr-auto font-bold">
-                <NumericFormat
-                  thousandSeparator="."
-                  decimalSeparator=","
-                  prefix="Rp. "
-                  placeholder="Rp. 0"
-                  value={watch("visits.total_amount")}
-                />
+          <FormProvider {...methods}>
+            <form
+              onSubmit={handleSubmit(handleSubmitVisit)}
+              className="flex flex-col gap-4"
+            >
+              <div>
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
+                  Patient Data
+                </h3>
               </div>
-              <Button type="submit" disabled={isPending}>
-                {isPending
-                  ? "Menyimpan..."
-                  : editVisit
-                    ? "Perbarui Kunjungan"
-                    : "Simpan Kunjungan"}
-              </Button>
-            </DialogFooter>
-          </form>
+
+              <PatientFormSection
+                patientList={patientList}
+                selectedCard={selectedCard}
+                setSelectedCard={setSelectedCard}
+                newPatient={newPatient}
+                setNewPatient={setNewPatient}
+                isEditPatient={isEditPatient}
+                setIsEditPatient={setIsEditPatient}
+                generateMRNumber={generateMRNumber}
+              />
+
+              {/* Visits */}
+              <VisitFormSection />
+
+              {/* Treatments */}
+              <TreatmentFormSelection
+                treatmentsList={treatmentsList}
+                staffList={staffList}
+              />
+
+              <DialogFooter>
+                <div className="mr-auto font-bold">
+                  <NumericFormat
+                    thousandSeparator="."
+                    decimalSeparator=","
+                    prefix="Rp. "
+                    placeholder="Rp. 0"
+                    value={watch("total_amount")}
+                  />
+                </div>
+                <Button type="submit" disabled={isPending}>
+                  {isPending
+                    ? "Menyimpan..."
+                    : isEditVisit
+                      ? "Perbarui Kunjungan"
+                      : "Simpan Kunjungan"}
+                </Button>
+              </DialogFooter>
+            </form>
+          </FormProvider>
         </div>
       </DialogContent>
     </Dialog>

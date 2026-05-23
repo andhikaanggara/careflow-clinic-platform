@@ -7,9 +7,13 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useFormContext } from "react-hook-form";
 import { NumericFormat } from "react-number-format";
+import { FormErrorMessage } from "@/components/ui/form-error";
 
-export function VisitFormSection({ setValue, watch }: any) {
+export function VisitFormSection() {
+  const { setValue, watch } = useFormContext();
+
   return (
     <section className="flex flex-col gap-4">
       <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">
@@ -22,8 +26,10 @@ export function VisitFormSection({ setValue, watch }: any) {
           <Label>Poli Tujuan</Label>
           <Select
             defaultValue="Umum"
-            value={watch("visits.poly_destination")}
-            onValueChange={(val) => setValue("visits.poly_destination", val)}
+            value={watch("poly_destination")|| "Umum"}
+            onValueChange={(val) =>
+              setValue("poly_destination", val, { shouldValidate: true })
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue />
@@ -35,6 +41,7 @@ export function VisitFormSection({ setValue, watch }: any) {
               <SelectItem value="Apotek">Apotek</SelectItem>
             </SelectContent>
           </Select>
+          <FormErrorMessage name="poly_destination" />
         </div>
 
         {/* recipe type */}
@@ -42,8 +49,10 @@ export function VisitFormSection({ setValue, watch }: any) {
           <Label>Jenis Resep</Label>
           <Select
             defaultValue="Biasa"
-            value={watch("visits.recipe_type")}
-            onValueChange={(val) => setValue("visits.recipe_type", val)}
+            value={watch("recipe_type") || "Biasa"}
+            onValueChange={(val) =>
+              setValue("recipe_type", val, { shouldValidate: true })
+            }
           >
             <SelectTrigger className="w-full">
               <SelectValue />
@@ -55,11 +64,12 @@ export function VisitFormSection({ setValue, watch }: any) {
               <SelectItem value="Rujuakan">Rujukan</SelectItem>
             </SelectContent>
           </Select>
+          <FormErrorMessage name="recipe_type" />
         </div>
       </div>
 
       {/* Payment Amount */}
-      <div className="grid grid-cols-3 gap-4">
+      <div className="grid grid-cols-3 gap-2">
         <div className="flex flex-col gap-1">
           <Label>Total Bayar</Label>
           <NumericFormat
@@ -69,10 +79,11 @@ export function VisitFormSection({ setValue, watch }: any) {
             prefix="Rp. "
             placeholder="Rp. 0"
             onValueChange={(val) => {
-              setValue("visits.total_amount", val.value);
+              setValue("total_amount", val.value, { shouldValidate: true });
             }}
-            value={watch("visits.total_amount")}
+            value={watch("total_amount")}
           />
+          <FormErrorMessage name="total_amount" />
         </div>
 
         {/* Payment */}
@@ -85,18 +96,21 @@ export function VisitFormSection({ setValue, watch }: any) {
             prefix="Rp. "
             placeholder="Rp. 0"
             onValueChange={(val) => {
-              setValue("visits.payment", val.value);
+              setValue("payment", val.value, { shouldValidate: true });
             }}
-            value={watch("visits.payment")}
+            value={watch("payment")}
           />
+          <FormErrorMessage name="payment" />
         </div>
 
         {/* Methode */}
         <div className="flex flex-col gap-1">
           <Label>Metode</Label>
           <Select
-            value={watch("visits.payment_methode")}
-            onValueChange={(val) => setValue("visits.payment_methode", val)}
+            value={watch("payment_methode")||"Cash"}
+            onValueChange={(val) =>
+              setValue("payment_methode", val, { shouldValidate: true })
+            }
             defaultValue="Cash"
           >
             <SelectTrigger className="w-full">
@@ -109,6 +123,7 @@ export function VisitFormSection({ setValue, watch }: any) {
               <SelectItem value="Trasfer">Transfer</SelectItem>
             </SelectContent>
           </Select>
+          <FormErrorMessage name="payment_methode" />
         </div>
       </div>
     </section>

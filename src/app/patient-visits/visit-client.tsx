@@ -17,6 +17,7 @@ import { DateRange } from "react-day-picker";
 import { endOfDay, format, isWithinInterval, startOfDay } from "date-fns";
 import { id } from "date-fns/locale";
 import { DeleteConfirmDialog } from "./_componenets/delete-confirm-dialog";
+import { VisitListMobile } from "./_componenets/visit-list-mobile";
 
 export default function VisitClient({
   patientList,
@@ -25,12 +26,12 @@ export default function VisitClient({
   visitsList,
 }: any) {
   const [isOpen, setIsOpen] = useState(false);
-  const [editVisit, setEditVisit] = useState<any>(null);
+  const [isEditVisit, setIsEditVisit] = useState<any>(null);
   const [deleteTarget, setDeleteTarget] = useState<any>(null);
   const [isAlertDeleteOpen, setIsAlertDeleteOpen] = useState(false);
 
   const handleOpenEdit = (row: any) => {
-    setEditVisit(row);
+    setIsEditVisit(row);
     setIsOpen(true);
   };
 
@@ -63,9 +64,8 @@ export default function VisitClient({
         icon={ClipboardList}
         actionLabel="Registrasi Pasien"
         onAction={() => {
-          setEditVisit(null);
+          setIsEditVisit(null);
           setIsOpen(true);
-          
         }}
       />
 
@@ -107,6 +107,12 @@ export default function VisitClient({
       {/* Main Table Section */}
       <div className="flex-1 min-h-0">
         {/* Mobile Card View */}
+        <VisitListMobile
+          visitsList={visitsList}
+          handleOpenEdit={handleOpenEdit}
+          setDeleteTarget={setDeleteTarget}
+          setIsAlertDeleteOpen={setIsAlertDeleteOpen}
+        />
 
         {/* Desktop View */}
         <VisitListDesktop
@@ -123,7 +129,7 @@ export default function VisitClient({
         treatmentsList={treatments}
         isOpen={isOpen}
         setIsOpen={setIsOpen}
-        editVisit={editVisit}
+        isEditVisit={isEditVisit}
       />
 
       <DeleteConfirmDialog

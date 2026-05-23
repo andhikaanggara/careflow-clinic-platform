@@ -56,7 +56,7 @@ export function FormCombobox({
 
   // Mencari item yang saat ini terpilih di react-hook-form
   const selectedItem = items.find((item) => item[idKey] === field.value);
-  
+
   // Menentukan apa yang tampil di kotak input (Jika tidak sedang mengetik, tampilkan nama item terpilih)
   const displayValue =
     searchQuery !== ""
@@ -87,8 +87,8 @@ export function FormCombobox({
           }}
           onBlur={onBlur}
         />
-        <ComboboxContent className="pointer-events-auto">
-          <ComboboxList className="max-h-43 overflow-y-auto border rounded-md shadow-sm bg-popover">
+        <ComboboxContent>
+          <ComboboxList className="max-h-50 overflow-y-auto rounded-md bg-popover">
             <ComboboxGroup>
               <ComboboxCollection>
                 {(item) => (
@@ -112,8 +112,8 @@ export function FormCombobox({
                 )}
               </ComboboxCollection>
             </ComboboxGroup>
-            {appendContent && <ComboboxGroup>{appendContent}</ComboboxGroup>}
           </ComboboxList>
+          <div>{appendContent}</div>
         </ComboboxContent>
       </Combobox>
     </div>

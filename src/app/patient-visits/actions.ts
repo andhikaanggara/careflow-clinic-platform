@@ -1,34 +1,11 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { createClient } from "@/utils/supabase/server";
-import { SupabaseClient } from "@supabase/supabase-js";
-
-export type StaffActionState = { error?: string; ok?: true };
-
-// helper for auth check and guest user detection
-async function getAuthContext(supabase: SupabaseClient) {
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) throw new Error("Unauthenticated");
-  return {
-    user,
-    isGuest: user.email === "guest@rahayumedika.com",
-  };
-}
+import { authAction } from "@/utils/action";
 
 // --- function create patient ---
-export async function createPatinet(data: any) {
-  const supabase = await createClient();
-  const { isGuest } = await getAuthContext(supabase);
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { error: "Unauthenticated" };
-
+export async function createPatient(data: any) {
+  return authAction(async ({ supabase, isGuest }) => {
     const { data: newPatient, error: pError } = await supabase
       .from("patients")
       .insert({
@@ -44,23 +21,13 @@ export async function createPatinet(data: any) {
       .single();
 
     if (pError) throw new Error(`Gagal simpan pasien: ${pError.message}`);
-
     return { ok: true, id: newPatient?.id };
-  } catch (err: any) {
-    return { error: err.message };
-  }
+  });
 }
 
 // --- function edit patient ---
 export async function editPatient(data: any) {
-  const supabase = await createClient();
-  const { isGuest } = await getAuthContext(supabase);
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { error: "Unauthenticated" };
-
+  return authAction(async ({ supabase }) => {
     const { error: pError } = await supabase
       .from("patients")
       .update({
@@ -73,25 +40,14 @@ export async function editPatient(data: any) {
       })
       .eq("id", data.id);
 
-    if (pError) throw new Error(`Gagal simpan pasien: ${pError.message}`);
-
+    if (pError) throw new Error(`Gagal edit pasien: ${pError.message}`);
     return { ok: true };
-  } catch (err: any) {
-    return { error: err.message };
-  }
+  });
 }
 
 // --- function create visits ---
 export async function createVisits(data: any) {
-  // variabel database
-  const supabase = await createClient();
-  const { isGuest } = await getAuthContext(supabase);
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { error: "Unauthenticated" };
-
+  return authAction(async ({ supabase, user, isGuest }) => {
     const { data: newVisits, error: vError } = await supabase
       .from("patient_visits")
       .insert({
@@ -111,22 +67,34 @@ export async function createVisits(data: any) {
 
     if (vError) throw new Error(`Gagal simpan kunjungan: ${vError.message}`);
     return { ok: true, id: newVisits?.id };
-  } catch (err: any) {
-    return { error: err.message };
-  }
+  });
+}
+
+// --- function edit visits ---
+export async function editVisits(data: any) {
+  return authAction(async ({ supabase }) => {
+    const { error: vError } = await supabase
+      .from("patient_visits")
+      .update({
+        date: data.date,
+        shift: data.shift,
+        patient_id: data.patient_id,
+        poly_destination: data.poly_destination,
+        recipe_type: data.recipe_type,
+        total_amount: data.total_amount,
+        payment: data.payment,
+        payment_methode: data.payment_methode,
+      })
+      .eq("id", data.id);
+
+    if (vError) throw new Error(`Gagal edit kunjungan: ${vError.message}`);
+    return { ok: true };
+  });
 }
 
 // --- function create treatments ---
 export async function createTreatments(data: any) {
-  // variabel database
-  const supabase = await createClient();
-  const { isGuest } = await getAuthContext(supabase);
-  try {
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) return { error: "Unauthenticated" };
-
+  return authAction(async ({ supabase, isGuest }) => {
     const treatmentsToInsert = data.map((t: any) => ({
       visit_id: t.visit_id,
       treatment_name_id: t.treatment_name_id,
@@ -143,18 +111,19 @@ export async function createTreatments(data: any) {
 
     revalidatePath("/patient-visits");
     return { ok: true };
-  } catch (err: any) {
-    return { error: err.message || "Terjadi kesalahan internal" };
-  }
+  });
 }
 
 // --- function delete visits ---
-export async function deleteVisits(id: string): Promise<StaffActionState> {
-  const supabase = await createClient();
-  const { error } = await supabase.from("patient_visits").delete().eq("id", id);
-  if (error) {
-    return { error: error.message };
-  }
-  revalidatePath("/patient_visits");
-  return { ok: true };
+export async function deleteVisits(id: string) {
+  return authAction(async ({ supabase }) => {
+    const { error } = await supabase
+      .from("patient_visits")
+      .delete()
+      .eq("id", id);
+
+    if (error) throw new Error(error.message);
+    revalidatePath("/patient_visits");
+    return { ok: true };
+  });
 }

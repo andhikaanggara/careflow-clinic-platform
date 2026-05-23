@@ -19,125 +19,111 @@ import {
 import { Textarea } from "@/components/ui/textarea";
 import { formatDateIndo } from "@/lib/utils/format";
 import { Edit3, UserPlus } from "lucide-react";
-import { Controller } from "react-hook-form";
+import { FormErrorMessage } from "@/components/ui/form-error";
+import { Controller, useFormContext } from "react-hook-form";
 import { PatternFormat } from "react-number-format";
 
 export function PatientFormSection({
-  patientList,
+  patientList = [],
   selectedCard,
   setSelectedCard,
-  watch,
-  setValue,
-  register,
-  control,
-  reset,
   newPatient,
   setNewPatient,
   setIsEditPatient,
   generateMRNumber,
 }: any) {
+  const { control, setValue, watch, register, reset } = useFormContext();
+
+  const selectedPatientId = watch("patient_id");
+  const currentGender = watch("patients.gender");
+  const currentPatientData = patientList.find(
+    (p: any) => p.id === selectedPatientId,
+  );
+
   return (
     <section>
-      <FormCombobox
-        name="visits.patient_id"
-        control={control}
-        label="Cari Pasien"
-        items={patientList}
-        displayKey="patient_name"
-        placeholder="Nama Sesuai KTP"
-        onSelect={(item) => {
-          setValue("visits.patient_id", item.id);
-          setValue("patients.id", item.id);
-          setNewPatient(false);
-          setSelectedCard(true);
-        }}
-        onBlur={(e) => setValue("patients.patient_name", e.target.value)}
-        renderItem={(item) => (
-          <Item size="xs" className="p-0 cursor-pointer">
-            <ItemContent>
-              <ItemTitle>{item.patient_name}</ItemTitle>
-              <ItemDescription>
-                {formatDateIndo(item.birth_date)}
-              </ItemDescription>
-              <ItemDescription className="line-clamp-1">
-                {item.address}
-              </ItemDescription>
-            </ItemContent>
-          </Item>
-        )}
-        appendContent={
-          <ComboboxItem className="p-0 flex justify-center">
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              onClick={() => {
-                setNewPatient(true);
-                setIsEditPatient(false);
-                setSelectedCard(false);
-                reset();
-                setValue("patients.mr_number", generateMRNumber());
-              }}
-              className="w-full text-xs cursor-pointer py-2"
-            >
-              <UserPlus className="w-3 h-3 mr-1" /> Tambah Pasien Baru
-            </Button>
-          </ComboboxItem>
-        }
-      />
-      {selectedCard ? (
+      <div className="flex flex-col gap-1">
+        <FormCombobox
+          name="patient_id"
+          control={control}
+          label="Cari Pasien"
+          items={patientList}
+          displayKey="patient_name"
+          placeholder="Nama Sesuai KTP"
+          onSelect={(item) => {
+            setValue("patient_id", item.id);
+            setValue("patients.id", item.id);
+            setNewPatient(false);
+            setSelectedCard(true);
+          }}
+          onBlur={(e) => setValue("patients.patient_name", e.target.value)}
+          renderItem={(item) => (
+            <Item size="xs" className="p-0 cursor-pointer">
+              <ItemContent>
+                <ItemTitle>{item.patient_name}</ItemTitle>
+                <ItemDescription>
+                  {formatDateIndo(item.birth_date)}
+                </ItemDescription>
+                <ItemDescription className="line-clamp-1">
+                  {item.address}
+                </ItemDescription>
+              </ItemContent>
+            </Item>
+          )}
+          appendContent={
+            <ComboboxItem className="p-0 flex justify-center">
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setNewPatient(true);
+                  setIsEditPatient(false);
+                  setSelectedCard(false);
+                  reset();
+                  setValue("patients.mr_number", generateMRNumber());
+                }}
+                className=" text-xs cursor-pointer py-2"
+              >
+                <UserPlus className="w-3 h-3 mr-1" /> Tambah Pasien Baru
+              </Button>
+            </ComboboxItem>
+          }
+        />
+        <FormErrorMessage name="patient_id" />
+      </div>
+
+      {selectedCard && currentPatientData ? (
         <div className="p-4 border border-border bg-background rounded-b-xl shadow-sm space-y-3 flex flex-col gap-2 text-xm">
           <div className="flex justify-between items-center">
             <span className="font-medium truncate">
-              {
-                patientList.find(
-                  (p: any) => p.id === watch("visits.patient_id"),
-                )?.gender
-              }
+              {currentPatientData.gender}
             </span>
             <span className="font-medium truncate">
-              {formatDateIndo(
-                patientList.find(
-                  (p: any) => p.id === watch("visits.patient_id"),
-                )?.birth_date,
-              )}
+              {formatDateIndo(currentPatientData.birth_date)}
             </span>
             <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-bold">
-              {
-                patientList.find(
-                  (p: any) => p.id === watch("visits.patient_id"),
-                )?.mr_number
-              }
+              {currentPatientData.mr_number}
             </span>
             <Button
               variant={"outline"}
               size="sm"
-              onClick={(data: any) => {
+              onClick={() => {
                 setSelectedCard(false);
-                setNewPatient(true); // reset form
+                setNewPatient(true);
                 setIsEditPatient(true);
-                patientList.find((p: any) => {
-                  if (p.id === watch("visits.patient_id")) {
-                    setValue("patients.mr_number", p.mr_number);
-                    setValue("patients.gender", p.gender);
-                    setValue("patients.birth_date", p.birth_date);
-                    setValue("patients.address", p.address);
-                    setValue("patients.phone", p.phone);
-                  }
-                });
+                setValue("patients.mr_number", currentPatientData.mr_number);
+                setValue("patients.gender", currentPatientData.gender);
+                setValue("patients.birth_date", currentPatientData.birth_date);
+                setValue("patients.address", currentPatientData.address);
+                setValue("patients.phone", currentPatientData.phone);
               }}
             >
               <Edit3 />
             </Button>
           </div>
           <div className="flex flex-col">
-            <span className="font-medium ">
-              {
-                patientList.find(
-                  (p: any) => p.id === watch("visits.patient_id"),
-                )?.address
-              }
-            </span>
+            <span className="font-medium ">{currentPatientData.address}</span>
           </div>
         </div>
       ) : (
@@ -149,31 +135,34 @@ export function PatientFormSection({
                 {/* MR Number */}
                 <div className="flex flex-col gap-1">
                   <Label>Nomor RM</Label>
-                  <Input {...register("patients.mr_number")} readOnly />
+                  <Input
+                    {...register("patients.mr_number")}
+                    readOnly
+                    className="bg-muted cursor-not-allowed"
+                  />
+                  <FormErrorMessage name="patients.mr_number" />
                 </div>
 
                 {/* gender */}
                 <div className="flex flex-col gap-1">
                   <Label>Jenis Kelamin</Label>
-                  <Controller
-                    control={control}
-                    name="patients.gender"
-                    rules={{ required: true }}
-                    render={({ field }) => (
-                      <Select
-                        onValueChange={field.onChange}
-                        value={field.value}
-                      >
-                        <SelectTrigger className="w-full">
-                          <SelectValue placeholder="Pilih Jenis Kelamin" />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="Laki-laki">Laki-laki</SelectItem>
-                          <SelectItem value="Perempuan">Perempuan</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    )}
-                  />
+                  <Select
+                    value={currentGender}
+                    onValueChange={(value) =>
+                      setValue("patients.gender", value, {
+                        shouldValidate: true,
+                      })
+                    }
+                  >
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Pilih Jenis Kelamin" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Laki-laki">Laki-laki</SelectItem>
+                      <SelectItem value="Perempuan">Perempuan</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <FormErrorMessage name="patients.gender" />
                 </div>
               </div>
 
@@ -181,12 +170,8 @@ export function PatientFormSection({
                 {/* Birth Date */}
                 <div className="flex flex-col gap-1">
                   <Label>Tanggal Lahir</Label>
-                  <Input
-                    type="date"
-                    {...register("patients.birth_date", {
-                      required: true,
-                    })}
-                  />
+                  <Input type="date" {...register("patients.birth_date")} />
+                  <FormErrorMessage name="patients.birth_date" />
                 </div>
 
                 {/* No telf */}
@@ -207,13 +192,15 @@ export function PatientFormSection({
                       />
                     )}
                   />
+                  <FormErrorMessage name="patients.phone" />
                 </div>
               </div>
 
               {/* Alamat */}
               <div className="flex flex-col gap-1 w-full">
                 <Label>Alamat</Label>
-                <Textarea required {...register("patients.address")} />
+                <Textarea {...register("patients.address")} />
+                <FormErrorMessage name="patients.address" />
               </div>
             </div>
           )}
