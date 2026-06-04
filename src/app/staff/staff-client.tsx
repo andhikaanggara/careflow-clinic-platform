@@ -8,7 +8,7 @@ import { Edit3, Plus, Trash2, Users } from "lucide-react";
 // ui components
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 import { StaffTableShell } from "./_components/staff-table-shell";
 import {
   Dialog,
@@ -28,10 +28,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import {
-  TableCell,
-  TableRow,
-} from "@/components/ui/table";
+import { TableCell, TableRow } from "@/components/ui/table";
 import {
   Combobox,
   ComboboxContent,
@@ -45,6 +42,7 @@ import {
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
 import { createStaff, deleteStaff, updateStaff, createRole } from "./actions";
+import { ConfirmDeleteDialog } from "@/components/feedback/confirm-delete-dialog";
 
 export default function StaffClient({
   initialStaff,
@@ -461,6 +459,15 @@ export default function StaffClient({
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <ConfirmDeleteDialog
+        isOpen={isAllertDeleteOpen}
+        onOpenChange={setIsAlertDeleteOpen}
+        entityName="Petugas"
+        itemName={deleteTarget?.full_name ?? ""}
+        onConfirm={onConfirmDelete}
+        isPending={isPending}
+      />
     </div>
   );
 }

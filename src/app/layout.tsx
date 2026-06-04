@@ -8,9 +8,9 @@ import { createClient } from "@/utils/supabase/server";
 
 // Providers & Global Components
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { LayoutWrapper } from "@/components/layout-wrapper";
-import { SessionWatcher } from "@/components/session-watcher";
-import { ThemeProvider } from "@/components/theme-provider";
+import { LayoutWrapper } from "@/components/layout/layout-wrapper";
+import { SessionWatcher } from "@/lib/providers/session-watcher";
+import { ThemeProvider } from "@/lib/providers/theme-provider";
 
 // Fonts Configuration
 const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });

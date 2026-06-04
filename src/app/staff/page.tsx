@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 // component
 import StaffClient from "./staff-client";
-import { DataErrorState } from "@/components/data-error-state";
+import { DataErrorState } from "@/components/feedback/data-error-state";
 
 // type
 import type { IStaff } from "@/type/staff";

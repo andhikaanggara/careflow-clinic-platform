@@ -1,4 +1,4 @@
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 import { StaffTableShell } from "./_components/staff-table-shell";
 import { Skeleton } from "@/components/ui/skeleton";
 import { TableRow, TableCell } from "@/components/ui/table";

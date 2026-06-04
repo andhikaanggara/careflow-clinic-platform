@@ -39,7 +39,7 @@ import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
-} from "./ui/collapsible";
+} from "@/components/ui/collapsible";
 
 const data = {
   navSimple: [
@@ -66,7 +66,7 @@ const data = {
       title: "Finance",
       url: "",
       icon: Wallet,
-      isActive: false,
+      isActive: true,
       items: [
         { title: "Receivables", url: "" },
         { title: "Payables", url: "" },
@@ -76,9 +76,9 @@ const data = {
       title: "Master",
       url: "",
       icon: Database,
-      isActive: false,
+      isActive: true,
       items: [
-        { title: "Patients", url: "" },
+        { title: "Patients", url: "/patients" },
         { title: "Staff", url: "/staff" },
         { title: "Roles", url: "" },
         { title: "Treatments", url: "" },

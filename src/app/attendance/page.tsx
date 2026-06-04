@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 
 // component
 import AttendanceClient from "@/app/attendance/attendance-client";
-import { DataErrorState } from "@/components/data-error-state";
+import { DataErrorState } from "@/components/feedback/data-error-state";
 
 //  type
 import type { IRole } from "@/type/role";

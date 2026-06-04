@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Calendar } from "lucide-react";
 
 // UI Components
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 
 // Actions & Types
 import type { IRole } from "@/type/role";

@@ -1,5 +1,5 @@
 import { Skeleton } from "@/components/ui/skeleton";
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 import {
   Table,
   TableBody,

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { NumericFormat } from "react-number-format";
 import { useRouter } from "next/navigation";
 import { FormProvider, useForm } from "react-hook-form";
@@ -181,8 +181,6 @@ export function VisitFormDialog({
 
   const handleSubmitVisit = async (data: any) => {
     startTransition(async () => {
-      console.log("submit data", data);
-
       try {
         let currentPatientId = data.patient_id;
         let currentVisitsId = data.id;

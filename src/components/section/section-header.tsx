@@ -7,9 +7,17 @@ interface SectionHeaderProps {
   icon: LucideIcon;
   actionLabel?: string;
   onAction?: () => void;
+  customAction?: React.ReactNode;
 }
 
-export function SectionHeader({ title, description, icon: Icon, actionLabel, onAction }: SectionHeaderProps) {
+export function SectionHeader({
+  title,
+  description,
+  icon: Icon,
+  actionLabel,
+  onAction,
+  customAction,
+}: SectionHeaderProps) {
   return (
     <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
       <div className="space-y-1">
@@ -19,11 +27,16 @@ export function SectionHeader({ title, description, icon: Icon, actionLabel, onA
         </h1>
         <p className="text-muted-foreground text-sm">{description}</p>
       </div>
-      {actionLabel && (
-        <Button onClick={onAction} className="shrink-0 shadow-sm cursor-pointer">
-          {actionLabel}
-        </Button>
-      )}
+      {customAction
+        ? customAction
+        : actionLabel && (
+            <Button
+              onClick={onAction}
+              className="shrink-0 shadow-sm cursor-pointer"
+            >
+              {actionLabel}
+            </Button>
+          )}
     </div>
   );
 }

@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
 // component
-import { DataErrorState } from "@/components/data-error-state";
+import { DataErrorState } from "@/components/feedback/data-error-state";
 
 //  type
 import type { IStaff } from "@/type/staff";

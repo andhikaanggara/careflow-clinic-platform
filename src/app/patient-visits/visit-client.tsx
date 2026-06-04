@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from "react";
 import { CalendarIcon, ClipboardList } from "lucide-react";
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 import { VisitFormDialog } from "./_componenets/visit-from-dialog";
 import { VisitListDesktop } from "./_componenets/visit-list-desktop";
 import { Field } from "@/components/ui/field";

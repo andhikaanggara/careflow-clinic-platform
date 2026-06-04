@@ -1,7 +1,7 @@
 "use client";
 
 import { ClipboardList, Plus, Search, Trash2, UserPlus } from "lucide-react";
-import { SectionHeader } from "@/components/section-header";
+import { SectionHeader } from "@/components/section/section-header";
 
 export default function VisitClientLoading({
   patientList,
