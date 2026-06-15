@@ -1,7 +1,7 @@
 import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 import { DataErrorState } from "@/components/feedback/data-error-state";
-import PatientsClient from "./patients-client";
+import PatientsClient from "./_components/patients-client";
 
 export const dynamic = "force-dynamic";
 

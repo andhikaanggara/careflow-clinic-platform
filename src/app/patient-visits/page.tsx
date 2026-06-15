@@ -25,8 +25,8 @@ export default async function PatientVisitsPage() {
   const [staffRes, patientRes, treatmentRes, visitsRes] = await Promise.all([
     supabase
       .from("staff")
-      .select("id, full_name, role, is_active")
-      .order("full_name", { ascending: true }),
+      .select("id, staff_name, role_id, is_active")
+      .order("staff_name", { ascending: true }),
     supabase
       .from("patients")
       .select("id, patient_name, gender, mr_number, address, birth_date")
@@ -51,7 +51,7 @@ export default async function PatientVisitsPage() {
         title="Manajement Petugas"
         message={staffRes.error.message}
         tableName="staff"
-        columns={["id", "full_name", "role", "is_active"]}
+        columns={["id", "staff_name", "role", "is_active"]}
       />
     );
   }

@@ -7,17 +7,17 @@ import { toast } from "sonner";
 import { Edit3, Search, Trash2, Users } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
 
 import { SectionHeader } from "@/components/section/section-header";
 import { SectionTable, TableColumn } from "@/components/section/section-table";
 import { ConfirmDeleteDialog } from "@/components/feedback/confirm-delete-dialog";
-import { PatientForm } from "@/features/patient-form/patient-form";
-import { deletePatient } from "@/features/patient-form/action";
+import { PatientForm } from "@/app/master-patients/_components/patient-form";
+import { deletePatient } from "@/app/master-patients/action";
 
 import { formatDateIndo } from "@/lib/utils/format";
 import { Patient } from "@/type/patient";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 
 const header: TableColumn<Patient>[] = [
   {
@@ -103,14 +103,13 @@ export default function PatientsClient({
   };
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-10 h-[calc(100vh-64px)] overflow-hidden">
+    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-6 h-[calc(100vh-64px)] overflow-hidden">
       <SectionHeader
         title="Patients"
         description="Manage your patients"
         icon={Users}
-        customAction={
-          <Button onClick={handleOpenCreate}>Create Patient</Button>
-        }
+        actionLabel="Create Patient"
+        onAction={handleOpenCreate}
       />
 
       <div className="relative md:w-70">
@@ -133,16 +132,13 @@ export default function PatientsClient({
         }
         onEdit={handleOpenEdit}
         onDelete={handleDeleteTrigger}
-        editIcon={<Edit3 className="h-3 w-3 text-blue-600" />} // Masukkan icon kustom Anda
-        deleteIcon={<Trash2 className="h-3 w-3" />}
-        // 3. Tampilan layout card untuk mobile HP
         mobileRender={(patient) => (
-          <div className="flex flex-col gap-2 p-4 border rounded-lg shadow-sm bg-background">
-            <div className="flex justify-between items-center">
+          <div className="flex flex-col gap-2">
+            <div className="flex justify-between items-center pb-2">
               <h4 className="font-bold text-lg">{patient.patient_name}</h4>
               <Badge variant="outline">{patient.mr_number}</Badge>
             </div>
-            <div className="grid grid-cols-3">
+            <div className="grid grid-cols-3 w-full">
               <p>{patient.gender}</p>
               <p>{patient.birth_date}</p>
               <p>{patient.phone}</p>
@@ -172,7 +168,7 @@ export default function PatientsClient({
         isOpen={isFormOpen}
         onOpenChange={setIsFormOpen}
         data={initialPatients}
-        initialData={selectedPatient}
+        editData={selectedPatient}
       />
 
       <ConfirmDeleteDialog

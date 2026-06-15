@@ -120,11 +120,11 @@ export function TreatmentFormSelection({ treatmentsList, staffList }: any) {
                                 );
                                 setValue(
                                   `treatments.${idx}.operation_staff`,
-                                  item.full_name,
+                                  item.staff_name,
                                 );
                               }}
                             >
-                              {item.full_name}
+                              {item.staff_name}
                             </ComboboxItem>
                           )}
                         </ComboboxList>
@@ -161,11 +161,11 @@ export function TreatmentFormSelection({ treatmentsList, staffList }: any) {
                                 );
                                 setValue(
                                   `treatments.${idx}.assistant_staff`,
-                                  item.full_name,
+                                  item.staff_name,
                                 );
                               }}
                             >
-                              {item.full_name}
+                              {item.staff_name}
                             </ComboboxItem>
                           )}
                         </ComboboxList>

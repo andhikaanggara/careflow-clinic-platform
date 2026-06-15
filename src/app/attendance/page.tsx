@@ -2,7 +2,7 @@ import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
 
 // component
-import AttendanceClient from "@/app/attendance/attendance-client";
+import AttendanceClient from "@/app/attendance/_components/attendance-client";
 import { DataErrorState } from "@/components/feedback/data-error-state";
 
 //  type
@@ -26,14 +26,16 @@ export default async function AttendancePage() {
   const [attendanceRes, staffRes, roleRes] = await Promise.all([
     supabase
       .from("attendance")
-      .select("id, date, shift, staff_id, created_at")
-      .order("date", { ascending: false })
-      .order("created_at", { ascending: false }),
+      .select("id, date, shift, staff_id, staff(staff_name)")
+      .order("date", { ascending: false }),
     supabase
       .from("staff")
-      .select("id, full_name, role, is_active")
-      .order("full_name", { ascending: true }),
-    supabase.from("roles").select("role").order("role", { ascending: true }),
+      .select("id, staff_name, role_id, is_active, roles(role_name)")
+      .order("staff_name", { ascending: true }),
+    supabase
+      .from("roles")
+      .select("role_name")
+      .order("role_name", { ascending: true }),
   ]);
 
   // return message error
@@ -54,7 +56,7 @@ export default async function AttendancePage() {
         title="Manajement Petugas"
         message={staffRes.error.message}
         tableName="staff"
-        columns={["id", "full_name", "role", "is_active"]}
+        columns={["id", "staff_name", "role", "is_active"]}
       />
     );
   }
@@ -71,8 +73,8 @@ export default async function AttendancePage() {
   }
 
   const roles = (roleRes.data ?? []) as IRole[];
-  const staff = (staffRes.data ?? []) as IStaff[];
-  const rows = (attendanceRes.data ?? []) as IAttendanceRow[];
+  const staff = ((staffRes.data as any) ?? []) as IStaff[];
+  const rows = ((attendanceRes.data as any) ?? []) as IAttendanceRow[];
 
   return (
     <AttendanceClient

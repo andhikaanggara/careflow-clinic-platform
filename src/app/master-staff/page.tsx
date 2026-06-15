@@ -1,15 +1,13 @@
-import { createClient } from "@/utils/supabase/server";
 import { redirect } from "next/navigation";
+import { createClient } from "@/utils/supabase/server";
 
 // component
-import StaffClient from "./staff-client";
+import StaffClient from "./_components/client-staff";
 import { DataErrorState } from "@/components/feedback/data-error-state";
 
 // type
 import type { IStaff } from "@/type/staff";
 import type { IRole } from "@/type/role";
-
-export const dynamic = "force-dynamic";
 
 // fetching data staff
 export default async function StaffPage() {
@@ -25,10 +23,13 @@ export default async function StaffPage() {
   const [staffRes, roleRes] = await Promise.all([
     supabase
       .from("staff")
-      .select("id, full_name, role, is_active")
-      .order("role", { ascending: true })
-      .order("full_name", { ascending: true }),
-    supabase.from("roles").select("role").order("role", { ascending: true }),
+      .select("id, staff_name, role_id, is_active, roles(role_name)")
+      .order("roles(role_name)", { ascending: true })
+      .order("staff_name", { ascending: true }),
+    supabase
+      .from("roles")
+      .select("role_name, id")
+      .order("role_name", { ascending: true }),
   ]);
 
   // return message error
@@ -38,7 +39,7 @@ export default async function StaffPage() {
         title="Manajement Petugas"
         message={staffRes.error.message}
         tableName="staff"
-        columns={["id", "full_name", "role", "is_active"]}
+        columns={["id", "staff_name", "role_id", "is_active"]}
       />
     );
   }
@@ -49,12 +50,12 @@ export default async function StaffPage() {
         title="Manajement Peran"
         message={roleRes.error.message}
         tableName="roles"
-        columns={["role"]}
+        columns={["role_name"]}
       />
     );
   }
 
-  const staff = (staffRes.data ?? []) as IStaff[];
+  const staff = ((staffRes.data as any) ?? []) as IStaff[];
   const roles = (roleRes.data ?? []) as IRole[];
 
   return <StaffClient initialStaff={staff} initialRoles={roles} />;

@@ -5,7 +5,6 @@ import {
   Calendar,
   Home,
   LogOut,
-  HeartPulse,
   Clipboard,
   ChevronRight,
   Database,
@@ -43,45 +42,45 @@ import {
 
 const data = {
   navSimple: [
-    {
-      title: "Dashboard",
-      url: "",
-      icon: Home,
-    },
-    { title: "Patient Visits", url: "/patient-visits", icon: Clipboard },
+    // {
+    //   title: "Dashboard",
+    //   url: "/",
+    //   icon: Home,
+    // },
+    // { title: "Patient Visits", url: "/patient-visits", icon: Clipboard },
 
     {
       title: "Attendance",
       url: "/attendance",
       icon: Calendar,
     },
-    {
-      title: "Drug Defect",
-      url: "",
-      icon: Pill,
-    },
+    // {
+    //   title: "Drug Defect",
+    //   url: "/drug-defect",
+    //   icon: Pill,
+    // },
   ],
   navDropDown: [
-    {
-      title: "Finance",
-      url: "",
-      icon: Wallet,
-      isActive: true,
-      items: [
-        { title: "Receivables", url: "" },
-        { title: "Payables", url: "" },
-      ],
-    },
+    // {
+    //   title: "Finance",
+    //   url: "",
+    //   icon: Wallet,
+    //   isActive: true,
+    //   items: [
+    //     { title: "Receivables", url: "/finance-receivables" },
+    //     { title: "Payables", url: "/finance-payables" },
+    //   ],
+    // },
     {
       title: "Master",
       url: "",
       icon: Database,
       isActive: true,
       items: [
-        { title: "Patients", url: "/patients" },
-        { title: "Staff", url: "/staff" },
-        { title: "Roles", url: "" },
-        { title: "Treatments", url: "" },
+        { title: "Patients", url: "/master-patients" },
+        { title: "Staff", url: "/master-staff" },
+        { title: "Roles", url: "/master-roles" },
+        // { title: "Treatments", url: "/master-treatments" },
       ],
     },
   ],
@@ -116,11 +115,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
             <SidebarMenuButton size="lg" asChild>
               <Link href="">
                 {/* harusnya ini link ke dashboard atau halaman utama setelah login */}
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-blue-600 text-white">
-                  <HeartPulse className="size-4" />
+                <div className="flex aspect-square size-8 items-center justify-center rounded-lg">
+                  <img src="favicon.ico" />
                 </div>
                 <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-bold text-blue-600">
+                  <span className="truncate font-bold text-blue-300">
                     Rahayu Medika
                   </span>
                   <span className="truncate text-xs text-muted-foreground">

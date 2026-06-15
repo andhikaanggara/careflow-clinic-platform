@@ -10,11 +10,11 @@ import {
   TableRow,
 } from "@/components/ui/table"; // Import komponen asli Shadcn UI
 import { Button } from "@/components/ui/button";
+import { Edit3, Trash2Icon } from "lucide-react";
 
 // Definisikan tipe untuk konfigurasi kolom desktop
 export interface TableColumn<T> {
   header: string;
-  // Bisa berupa key dari object data, atau fungsi untuk render custom HTML/Badge
   accessor: keyof T | ((item: T) => React.ReactNode);
   className?: string;
 }
@@ -27,8 +27,6 @@ interface SectionTableProps<T> {
   onEdit?: (item: T) => void;
   onDelete?: (item: T) => void;
   isPending?: boolean;
-  editIcon?: React.ReactNode;
-  deleteIcon?: React.ReactNode;
 }
 
 export function SectionTable<T extends { id: string | number }>({
@@ -39,8 +37,6 @@ export function SectionTable<T extends { id: string | number }>({
   onEdit,
   onDelete,
   isPending = false,
-  editIcon = "Edit",
-  deleteIcon = "Hapus",
 }: SectionTableProps<T>) {
   const hasActions = onEdit || onDelete;
 
@@ -53,7 +49,14 @@ export function SectionTable<T extends { id: string | number }>({
             {emptyMessage}
           </div>
         ) : (
-          data.map((item) => <div key={item.id}>{mobileRender(item)}</div>)
+          data.map((item) => (
+            <div
+              key={item.id}
+              className="flex flex-col gap-2 p-4 border rounded-lg shadow-sm bg-background"
+            >
+              {mobileRender(item)}
+            </div>
+          ))
         )}
       </div>
 
@@ -62,7 +65,7 @@ export function SectionTable<T extends { id: string | number }>({
         <Table>
           <TableHeader className="bg-muted/50 backdrop-blur-sm sticky top-0 z-10 shadow-sm">
             <TableRow>
-              <TableHead className="font-semibold px-4">No</TableHead>
+              <TableHead className="font-semibold px-4 w-10">No</TableHead>
               {header.map((col, index) => (
                 <TableHead key={index} className="font-semibold">
                   {col.header}
@@ -109,7 +112,7 @@ export function SectionTable<T extends { id: string | number }>({
                             className="cursor-pointer"
                             onClick={() => onEdit(item)}
                           >
-                            {editIcon}
+                            <Edit3 className="h-3 w-3 text-blue-600" />
                           </Button>
                         )}
                         {onDelete && (
@@ -121,7 +124,7 @@ export function SectionTable<T extends { id: string | number }>({
                             disabled={isPending}
                             onClick={() => onDelete(item)}
                           >
-                            {deleteIcon}
+                            <Trash2Icon className="h-3 w-3" />
                           </Button>
                         )}
                       </div>

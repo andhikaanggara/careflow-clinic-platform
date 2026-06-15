@@ -1,22 +1,12 @@
-import { UserPlus } from "lucide-react";
-import { Button } from "./ui/button";
 import {
   Combobox,
   ComboboxCollection,
   ComboboxContent,
-  ComboboxEmpty,
   ComboboxGroup,
   ComboboxInput,
   ComboboxItem,
   ComboboxList,
 } from "./ui/combobox";
-import {
-  Item,
-  ItemContent,
-  ItemDescription,
-  ItemSeparator,
-  ItemTitle,
-} from "./ui/item";
 import { Label } from "./ui/label";
 
 import { useController, Control } from "react-hook-form";
@@ -24,7 +14,7 @@ import { useMemo, useState } from "react";
 
 interface FormComboboxProps {
   name: string;
-  control: Control<any>;
+  control: Control<any,any>;
   label: string;
   items: any[];
   idKey?: string;

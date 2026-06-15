@@ -1,4 +1,5 @@
-export interface IRole {
-  role: string;
-  is_demo: boolean;
+export type IRole = {
+  id: string;
+  role_name: string;
+  is_active: boolean;
 }

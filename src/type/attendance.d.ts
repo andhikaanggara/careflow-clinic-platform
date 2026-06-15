@@ -1,8 +1,9 @@
-/** Satu baris dari tabel `attendance` (Supabase). */
+import { string } from "zod";
+
 export interface IAttendanceRow {
   id: string;
   date: string;
   shift: string;
   staff_id: string;
-  created_at?: string;
+  staff?: { staff_name: string };
 }

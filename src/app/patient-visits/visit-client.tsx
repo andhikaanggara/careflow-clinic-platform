@@ -57,7 +57,7 @@ export default function VisitClient({
   }, [date, visitsList]);
 
   return (
-    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-10">
+    <div className="mx-auto flex w-full flex-col gap-6 p-4 md:p-6">
       <SectionHeader
         title="Operasional Klinik"
         description="Data kunjungan dan transaksi hari ini."
