@@ -56,7 +56,7 @@ export default function LoginClient() {
       alert(error.message);
       setLoading(false);
     } else {
-      router.push("/staff");
+      router.push("/");
       router.refresh();
     }
   };
