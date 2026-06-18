@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState, useTransition } from "react";
-import { Calendar, Edit3, Trash2 } from "lucide-react";
+import { CalendarIcon, Download, Edit3, Trash2 } from "lucide-react";
 
 // UI Components
 import { SectionHeader } from "@/components/section/section-header";
@@ -23,6 +23,17 @@ import { ConfirmDeleteDialog } from "@/components/feedback/confirm-delete-dialog
 import { delleteAttendance } from "../actions";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { exportAttendance } from "@/lib/utils/export-attendance";
+import { Field } from "@/components/ui/field";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { DateRange } from "react-day-picker";
+import { format, setDate as setDay, subMonths } from "date-fns";
+import { id } from "date-fns/locale";
+import { Calendar } from "@/components/ui/calendar";
 
 export default function AttendanceClient({
   initialAttendance,
@@ -57,10 +68,32 @@ export default function AttendanceClient({
     [staffList],
   );
 
+  // range picker
+  const [date, setDate] = useState<DateRange | undefined>(() => {
+    const today = new Date();
+    const fromDate = setDay(subMonths(today, 1), 28);
+    const toDate = setDay(today, 27);
+    return { from: fromDate, to: toDate };
+  });
+
+  // filter date data
+  const filteredAttendanceByDate = useMemo(() => {
+    if (!date?.from) return initialAttendance;
+
+    const fromTime = new Date(date.from).setHours(0, 0, 0, 0);
+    const toTime = new Date(date.to || date.from).setHours(23, 59, 59, 999);
+
+    return initialAttendance.filter((item) => {
+      const itemTime = new Date(item.date).getTime();
+      return itemTime >= fromTime && itemTime <= toTime;
+    });
+  }, [initialAttendance, date]);
+
+  // grouped data by filter
   const groupedAttendance = useMemo(() => {
     const groups: Record<string, GroupedAttendance> = {};
 
-    initialAttendance.forEach((item) => {
+    filteredAttendanceByDate.forEach((item) => {
       // Kombinasi Tanggal dan Shift sebagai pengenal unik kelompok
       const groupKey = `${item.date}-${item.shift}`;
 
@@ -82,7 +115,7 @@ export default function AttendanceClient({
     });
 
     return Object.values(groups).sort((a, b) => b.date.localeCompare(a.date));
-  }, [initialAttendance, staffMap]);
+  }, [filteredAttendanceByDate, staffMap]);
 
   const HEADER: TableColumn<GroupedAttendance>[] = [
     {
@@ -132,10 +165,75 @@ export default function AttendanceClient({
       <SectionHeader
         title="Staff Attendance"
         description="Manage daily clinic attendance."
-        icon={Calendar}
+        icon={CalendarIcon}
         actionLabel="Add attendance"
         onAction={handleOpenAdd}
       />
+
+      <div className="flex justify-between">
+        <div className="w-full"></div>
+        <div className="flex gap-2">
+          <Field className="mx-auto w-60">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button
+                  variant="outline"
+                  id="date-picker-range"
+                  className="justify-start px-2.5 font-normal"
+                >
+                  <CalendarIcon />
+                  {date?.from ? (
+                    date.to ? (
+                      <>
+                        {format(date.from, "dd MMMM yyyy", { locale: id })} -{" "}
+                        {format(date.to, "dd MMMM yyyy", { locale: id })}
+                      </>
+                    ) : (
+                      format(date.from, "dd MMMM yyyy", { locale: id })
+                    )
+                  ) : (
+                    <span>Pick a date</span>
+                  )}
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-auto p-0" align="start">
+                <Calendar
+                  mode="range"
+                  defaultMonth={date?.from}
+                  selected={date}
+                  onSelect={setDate}
+                  numberOfMonths={1}
+                />
+              </PopoverContent>
+            </Popover>
+          </Field>
+          <Button
+            onClick={async () => {
+              try {
+                const rangeLabel =
+                  date?.from && date.to
+                    ? ` ${format(date.from, "dd_MMM")}_sd_${format(date.to, "dd_MMM_yyy")}`
+                    : "Periode";
+
+                await exportAttendance(
+                  filteredAttendanceByDate,
+                  staffList,
+                  rangeLabel,
+                );
+                toast.success("File berhasil diunduh!");
+              } catch (error) {
+                toast.error("Gagal mengekspor data");
+                console.error(error);
+              }
+            }}
+            className="shrink-0 shadow-sm cursor-pointer flex items-center"
+            variant="outline"
+          >
+            <Download />
+            <div className="hidden md:block"> Export </div>
+          </Button>
+        </div>
+      </div>
 
       <SectionTable
         data={groupedAttendance}
