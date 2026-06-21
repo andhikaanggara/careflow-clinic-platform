@@ -41,7 +41,7 @@ export default function LoginClient() {
       alert(error.message);
       setLoading(false);
     } else {
-      router.push("/staff"); //harusnya ini push ke dashboard atau halaman utama setelah login
+      router.push("/"); //harusnya ini push ke dashboard atau halaman utama setelah login
       router.refresh();
     }
   };

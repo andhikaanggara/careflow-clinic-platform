@@ -3,7 +3,7 @@
 import { Search, Users } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { SectionHeader } from "@/components/section/section-header";
-import { SectionTable, TableColumn } from "@/components/section/section-table";
+import { SectionTable } from "@/components/section/section-table";
 
 const header = [
   {

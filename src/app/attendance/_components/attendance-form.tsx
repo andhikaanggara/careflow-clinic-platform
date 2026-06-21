@@ -1,10 +1,9 @@
 "use client";
 
-import { FormEvent, useEffect, useState, useTransition } from "react";
+import { useEffect, useTransition } from "react";
 import { format } from "date-fns";
 
 import { createAttendance, updateAttendance } from "../actions";
-import { useFormDialog } from "@/hooks/use-form-dialog";
 import { FormDialogShell } from "@/components/form-dialog-shell";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -15,18 +14,9 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import {
-  Combobox,
-  ComboboxContent,
-  ComboboxEmpty,
-  ComboboxInput,
-  ComboboxItem,
-  ComboboxList,
-} from "@/components/ui/combobox";
 import { IStaff } from "@/type/staff";
 import { useRouter } from "next/navigation";
 import { useForm } from "react-hook-form";
-import { attendanceSchema, AttendanceSchema } from "./schema";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { toast } from "sonner";

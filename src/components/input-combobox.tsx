@@ -54,7 +54,7 @@ export function InputCombobox<T, TFormValues extends FieldValues>({
               className={showAddButton ? "grid grid-cols-8 gap-2" : "w-full"}
             >
               <Combobox items={items} modal={false}>
-                <div className="relative flex items-center">
+                <div className="relative flex items-cente col-span-7">
                   <ComboboxInput
                     id={field.name}
                     value={
@@ -71,7 +71,7 @@ export function InputCombobox<T, TFormValues extends FieldValues>({
                         e.stopPropagation();
                         field.onChange(""); // Paksa React Hook Form mengosongkan state field ini
                       }}
-                      className="absolute right-2.5 p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mr-6"
+                      className="absolute right-2 top-1.5 p-1 rounded-md text-muted-foreground hover:bg-muted hover:text-foreground transition-colors mr-6"
                     >
                       <X className="h-4 w-4" />
                     </button>
