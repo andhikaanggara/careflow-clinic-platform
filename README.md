@@ -1,36 +1,61 @@
-# Careflow Clinic Platform
+# 🏥 Pharmaxa Care (Careflow)
 
-Careflow is a modern Clinic Management System designed to streamline healthcare operations, including staff management, patient visits, and financial reporting.
+A high-performance, real-time Clinical Management System built to eliminate administrative overhead and manual tracking in healthcare facilities.
 
-> **Status: Work in Progress.** Currently, the core **Staff Attendance Module** is fully functional and integrated with Supabase.
+> **Production Status:** The Core Staff Attendance, Master Staff, and Master Role modules are fully operational, optimized, and integrated with a relational Supabase database architecture.
 
-## 🏥 Project Overview
+---
 
-This platform is built to solve administrative bottlenecks in clinical environments. While the project is expanding to cover patient records and financial tracking, the current version focuses on a robust, real-time attendance system for healthcare professionals.
+## 🚀 Business Impact & Metriks (Why This Matters)
+* **1-Click Payroll Preparation:** Reduced monthly attendance compilation and cut-off reporting loops from manual, error-prone spreadsheets into a **single-click instant task** generating pre-formatted multi-sheet Excel workbooks.
+* **Smart Cut-off Filtering:** Automatically aligns with clinical standard operating procedures (SOPs) by defaulting views and exports to the specific 28th (past month) – 27th (current month) cycle.
 
-## 🚀 Tech Stack
+---
 
-- **Framework:** [Next.js 14](https://nextjs.org/) (App Router)
-- **Styling & UI:** [Tailwind CSS](https://tailwindcss.com/) & [Shadcn UI](https://ui.shadcn.com/)
-- **Database & Auth:** [Supabase](https://supabase.com/) (PostgreSQL)
-- **Type Safety:** [TypeScript](https://www.typescriptlang.org/)
+## ✨ Key Features & Modules
 
-## ✨ Current Features (Module: Staff Management)
+### 1. 📅 Staff Attendance Engine
+* **Relational Multi-Staff Shifts:** Handles complex medical shift patterns (Pagi, Sore, Malam) mapped dynamically into distinct healthcare professional roles.
+* **Dynamic Relational Aggregation:** Converts single row-based PostgreSQL entries into streamlined, grouped shift data for multi-role medical staff configurations.
+* **Instant Exports (`exceljs`):** Compiles live attendance records into a multi-sheet downloadable Excel workbook, dynamically generating **1 dedicated sheet per staff member** with automated native Excel totals (`=SUM()`).
 
-- **Real-time Attendance:** Staff can clock in/out with precise timestamp recording.
-- **Attendance History:** Securely stored logs in Supabase to track working hours.
-- **Responsive Dashboard:** Optimized for desktop and tablet use for on-site clinic management.
-- **Role-based Logic:** Built with future-proof architecture for admin and staff permissions.
+### 2. 👥 Master Staff Management
+* Track and manage clinical staff directory, employment history, role mapping, and active/inactive personnel statuses under rigorous TypeScript typings.
 
-## 🛣️ Roadmap (Upcoming Features)
+### 3. 🛡️ Master Role Configuration
+* Scalable relational model to define healthcare facility departments (e.g., Apoteker, Dokter, Asisten Apoteker, Perawat) allowing flexible dynamic forms.
 
-- [ ] **Patient Visit Management:** Registration and medical record tracking.
-- [ ] **Financial Module:** Revenue reporting, billing, and clinic expenses.
-- [ ] **Automated Reporting:** Monthly attendance and financial summaries.
+---
 
-## 🛠️ Local Development
+## 🛠️ Technical Implementation Highlights
 
-1. **Clone the repository:**
-   ```bash
-   git clone [https://github.com/andhikaanggara/careflow-clinic-platform.git](https://github.com/andhikaanggara/careflow-clinic-platform.git)
-   ```
+* **Framework:** Next.js 14/15 (App Router) utilizing Server Page data fetching with dynamic Client Component UI interaction states.
+* **State Management & Validation:** Fully structured under **React Hook Form** paired with **Zod Schema validation**, ensuring seamless, error-free client-side controls.
+* **Database & Persistence:** **Supabase (PostgreSQL)** leveraging deep relational schemas, Foreign Key constraints (`attendance_staff_id_fkey`), and automated primary key UUID generations.
+* **UI & Component Architecture:** Built using **Tailwind CSS** and **Shadcn UI**, utilizing highly generic *reusable* components such as custom programmatic dialog shells (`FormDialogShell`, `ConfirmDeleteDialog`) and strict generic type-safe combobox fields (`InputCombobox<T>`).
+
+---
+
+## 📦 Tech Stack
+
+- **Frontend:** Next.js, TypeScript, Tailwind CSS, Shadcn UI (Radix UI)
+- **Forms & Validation:** React Hook Form, @hookform/resolvers, Zod
+- **Data Engineering & Formatting:** Supabase JS Client, ExcelJS, File-Saver, Date-fns
+- **Icons:** Lucide React
+
+---
+
+## 🛣️ Production Roadmap
+
+- [x] Multi-sheet automated Excel reporting tool engine.
+- [x] Dynamic relational form fields handling multi-role dropdown selection.
+- [ ] Role-Based Access Control (RBAC) authorization middleware.
+- [ ] Clinic POS (Point of Sales) & Drug Procurement Integration.
+
+---
+
+## 🌐 Live Demo & Deployment
+
+The application is fully deployed and production-ready. You can access the live system, explore the relational grid table, test the dynamic form validation, and try the 1-click Excel export via the link below:
+
+🔗 **Live Production URL:** [https://rahayu-medika.vercel.app/](https://rahayu-medika.vercel.app/)
